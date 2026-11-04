@@ -199,9 +199,7 @@ class PrayerRepository {
           break;
         }
       }
-      if (cityData == null) {
-        cityData = prayerTimes.first as Map<String, dynamic>;
-      }
+      cityData ??= prayerTimes.first as Map<String, dynamic>;
       
       final String staticTimezone = data['timezone'] ?? fallbackTimezone;
       
@@ -233,7 +231,6 @@ class PrayerRepository {
       final gregorian = DateFormat('EEEE, d MMMM, y', 'en_US').format(date);
       final hijriLabel = data['hijri_date'] ?? _hijriLabel(date);
       
-      print("Successfully parsed static data for ${cityData['city']}");
       return PrayerDayData(
         city: cityData['city'],
         country: country,
@@ -244,9 +241,7 @@ class PrayerRepository {
         sunrise: sunrise,
         sunset: sunset,
       );
-    } catch (e, stack) {
-      print("Error loading static prayer data: $e");
-      print(stack);
+    } catch (_) {
       return null;
     }
   }

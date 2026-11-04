@@ -1,0 +1,307 @@
+{
+  "country": "Bangladesh",
+  "timezone": "Asia/Dhaka",
+  "date": "2026-08-13",
+  "prayer_times": [
+    {
+      "city": "Barisal",
+      "fajr": "04:14 AM",
+      "sunrise": "05:34 AM",
+      "dhuhr": "12:04 PM",
+      "asr": "03:28 PM",
+      "maghrib": "06:33 PM",
+      "isha": "08:03 PM",
+      "qiyam": "12:59 AM"
+    },
+    {
+      "city": "Chittagong",
+      "fajr": "04:08 AM",
+      "sunrise": "05:29 AM",
+      "dhuhr": "11:58 AM",
+      "asr": "03:22 PM",
+      "maghrib": "06:26 PM",
+      "isha": "07:56 PM",
+      "qiyam": "12:54 AM"
+    },
+    {
+      "city": "Comilla",
+      "fajr": "04:09 AM",
+      "sunrise": "05:30 AM",
+      "dhuhr": "12:01 PM",
+      "asr": "03:26 PM",
+      "maghrib": "06:30 PM",
+      "isha": "08:00 PM",
+      "qiyam": "12:56 AM"
+    },
+    {
+      "city": "Dhaka",
+      "fajr": "04:11 AM",
+      "sunrise": "05:33 AM",
+      "dhuhr": "12:04 PM",
+      "asr": "03:30 PM",
+      "maghrib": "06:34 PM",
+      "isha": "08:04 PM",
+      "qiyam": "12:58 AM"
+    },
+    {
+      "city": "Khulna",
+      "fajr": "04:17 AM",
+      "sunrise": "05:37 AM",
+      "dhuhr": "12:07 PM",
+      "asr": "03:32 PM",
+      "maghrib": "06:36 PM",
+      "isha": "08:06 PM",
+      "qiyam": "01:02 AM"
+    },
+    {
+      "city": "Bagerhat",
+      "fajr": "04:16 AM",
+      "sunrise": "05:36 AM",
+      "dhuhr": "12:06 PM",
+      "asr": "03:30 PM",
+      "maghrib": "06:35 PM",
+      "isha": "08:05 PM",
+      "qiyam": "01:01 AM"
+    },
+    {
+      "city": "Bogra",
+      "fajr": "04:13 AM",
+      "sunrise": "05:35 AM",
+      "dhuhr": "12:08 PM",
+      "asr": "03:36 PM",
+      "maghrib": "06:39 PM",
+      "isha": "08:09 PM",
+      "qiyam": "01:01 AM"
+    },
+    {
+      "city": "Brahmanbaria",
+      "fajr": "04:14 AM",
+      "sunrise": "05:36 AM",
+      "dhuhr": "12:08 PM",
+      "asr": "03:36 PM",
+      "maghrib": "06:39 PM",
+      "isha": "08:09 PM",
+      "qiyam": "01:01 AM"
+    },
+    {
+      "city": "Cox's Bazar",
+      "fajr": "04:10 AM",
+      "sunrise": "05:29 AM",
+      "dhuhr": "11:58 AM",
+      "asr": "03:19 PM",
+      "maghrib": "06:25 PM",
+      "isha": "07:55 PM",
+      "qiyam": "12:55 AM"
+    },
+    {
+      "city": "Dinajpur",
+      "fajr": "04:14 AM",
+      "sunrise": "05:37 AM",
+      "dhuhr": "12:11 PM",
+      "asr": "03:40 PM",
+      "maghrib": "06:43 PM",
+      "isha": "08:13 PM",
+      "qiyam": "01:03 AM"
+    },
+    {
+      "city": "Faridpur",
+      "fajr": "04:17 AM",
+      "sunrise": "05:38 AM",
+      "dhuhr": "12:09 PM",
+      "asr": "03:34 PM",
+      "maghrib": "06:38 PM",
+      "isha": "08:08 PM",
+      "qiyam": "01:04 AM"
+    },
+    {
+      "city": "Feni",
+      "fajr": "04:09 AM",
+      "sunrise": "05:29 AM",
+      "dhuhr": "12:00 PM",
+      "asr": "03:25 PM",
+      "maghrib": "06:29 PM",
+      "isha": "07:59 PM",
+      "qiyam": "12:55 AM"
+    },
+    {
+      "city": "Gazipur",
+      "fajr": "04:12 AM",
+      "sunrise": "05:33 AM",
+      "dhuhr": "12:03 PM",
+      "asr": "03:27 PM",
+      "maghrib": "06:31 PM",
+      "isha": "08:01 PM",
+      "qiyam": "12:57 AM"
+    },
+    {
+      "city": "Jamalpur",
+      "fajr": "04:10 AM",
+      "sunrise": "05:31 AM",
+      "dhuhr": "12:01 PM",
+      "asr": "03:26 PM",
+      "maghrib": "06:30 PM",
+      "isha": "08:00 PM",
+      "qiyam": "12:56 AM"
+    },
+    {
+      "city": "Jessore",
+      "fajr": "04:17 AM",
+      "sunrise": "05:38 AM",
+      "dhuhr": "12:09 PM",
+      "asr": "03:34 PM",
+      "maghrib": "06:38 PM",
+      "isha": "08:08 PM",
+      "qiyam": "01:04 AM"
+    },
+    {
+      "city": "Kushtia",
+      "fajr": "04:15 AM",
+      "sunrise": "05:36 AM",
+      "dhuhr": "12:08 PM",
+      "asr": "03:34 PM",
+      "maghrib": "06:37 PM",
+      "isha": "08:07 PM",
+      "qiyam": "01:01 AM"
+    },
+    {
+      "city": "Mymensingh",
+      "fajr": "04:09 AM",
+      "sunrise": "05:31 AM",
+      "dhuhr": "12:04 PM",
+      "asr": "03:32 PM",
+      "maghrib": "06:35 PM",
+      "isha": "08:05 PM",
+      "qiyam": "12:57 AM"
+    },
+    {
+      "city": "Nagarpur",
+      "fajr": "04:10 AM",
+      "sunrise": "05:32 AM",
+      "dhuhr": "12:03 PM",
+      "asr": "03:29 PM",
+      "maghrib": "06:33 PM",
+      "isha": "08:03 PM",
+      "qiyam": "12:57 AM"
+    },
+    {
+      "city": "Narayanganj",
+      "fajr": "04:11 AM",
+      "sunrise": "05:32 AM",
+      "dhuhr": "12:03 PM",
+      "asr": "03:29 PM",
+      "maghrib": "06:33 PM",
+      "isha": "08:03 PM",
+      "qiyam": "12:57 AM"
+    },
+    {
+      "city": "Narsingdi",
+      "fajr": "04:10 AM",
+      "sunrise": "05:31 AM",
+      "dhuhr": "12:03 PM",
+      "asr": "03:29 PM",
+      "maghrib": "06:33 PM",
+      "isha": "08:03 PM",
+      "qiyam": "12:57 AM"
+    },
+    {
+      "city": "Nawabganj",
+      "fajr": "04:18 AM",
+      "sunrise": "05:40 AM",
+      "dhuhr": "12:12 PM",
+      "asr": "03:40 PM",
+      "maghrib": "06:43 PM",
+      "isha": "08:13 PM",
+      "qiyam": "01:05 AM"
+    },
+    {
+      "city": "Noakhali",
+      "fajr": "04:10 AM",
+      "sunrise": "05:31 AM",
+      "dhuhr": "12:01 PM",
+      "asr": "03:26 PM",
+      "maghrib": "06:30 PM",
+      "isha": "08:00 PM",
+      "qiyam": "12:56 AM"
+    },
+    {
+      "city": "Pabna",
+      "fajr": "04:15 AM",
+      "sunrise": "05:37 AM",
+      "dhuhr": "12:08 PM",
+      "asr": "03:35 PM",
+      "maghrib": "06:39 PM",
+      "isha": "08:09 PM",
+      "qiyam": "01:03 AM"
+    },
+    {
+      "city": "Rajshahi",
+      "fajr": "04:17 AM",
+      "sunrise": "05:39 AM",
+      "dhuhr": "12:11 PM",
+      "asr": "03:38 PM",
+      "maghrib": "06:42 PM",
+      "isha": "08:12 PM",
+      "qiyam": "01:04 AM"
+    },
+    {
+      "city": "Rangpur",
+      "fajr": "04:11 AM",
+      "sunrise": "05:35 AM",
+      "dhuhr": "12:08 PM",
+      "asr": "03:38 PM",
+      "maghrib": "06:41 PM",
+      "isha": "08:11 PM",
+      "qiyam": "01:01 AM"
+    },
+    {
+      "city": "Shibganj",
+      "fajr": "04:14 AM",
+      "sunrise": "05:38 AM",
+      "dhuhr": "12:12 PM",
+      "asr": "03:42 PM",
+      "maghrib": "06:45 PM",
+      "isha": "08:15 PM",
+      "qiyam": "01:03 AM"
+    },
+    {
+      "city": "Sirajganj",
+      "fajr": "04:12 AM",
+      "sunrise": "05:34 AM",
+      "dhuhr": "12:07 PM",
+      "asr": "03:34 PM",
+      "maghrib": "06:38 PM",
+      "isha": "08:08 PM",
+      "qiyam": "01:00 AM"
+    },
+    {
+      "city": "Sylhet",
+      "fajr": "04:03 AM",
+      "sunrise": "05:25 AM",
+      "dhuhr": "11:58 AM",
+      "asr": "03:26 PM",
+      "maghrib": "06:29 PM",
+      "isha": "07:59 PM",
+      "qiyam": "12:51 AM"
+    },
+    {
+      "city": "Tangail",
+      "fajr": "04:12 AM",
+      "sunrise": "05:34 AM",
+      "dhuhr": "12:06 PM",
+      "asr": "03:33 PM",
+      "maghrib": "06:36 PM",
+      "isha": "08:06 PM",
+      "qiyam": "01:00 AM"
+    },
+    {
+      "city": "Tungi",
+      "fajr": "04:11 AM",
+      "sunrise": "05:32 AM",
+      "dhuhr": "12:04 PM",
+      "asr": "03:30 PM",
+      "maghrib": "06:34 PM",
+      "isha": "08:04 PM",
+      "qiyam": "12:58 AM"
+    }
+  ]
+}

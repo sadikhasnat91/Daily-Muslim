@@ -1,0 +1,800 @@
+[
+  {
+    "number": 1,
+    "englishName": "Al-Fatihah",
+    "name": "الفاتحة",
+    "numberOfAyahs": 7,
+    "revelationType": "Meccan"
+  },
+  {
+    "number": 2,
+    "englishName": "Al-Baqarah",
+    "name": "البقرة",
+    "numberOfAyahs": 286,
+    "revelationType": "Medinan"
+  },
+  {
+    "number": 3,
+    "englishName": "Aal-E-Imran",
+    "name": "آل عمران",
+    "numberOfAyahs": 200,
+    "revelationType": "Medinan"
+  },
+  {
+    "number": 4,
+    "englishName": "An-Nisa",
+    "name": "النساء",
+    "numberOfAyahs": 176,
+    "revelationType": "Medinan"
+  },
+  {
+    "number": 5,
+    "englishName": "Al-Maidah",
+    "name": "المائدة",
+    "numberOfAyahs": 120,
+    "revelationType": "Medinan"
+  },
+  {
+    "number": 6,
+    "englishName": "Al-Anam",
+    "name": "الأنعام",
+    "numberOfAyahs": 165,
+    "revelationType": "Meccan"
+  },
+  {
+    "number": 7,
+    "englishName": "Al-Araf",
+    "name": "الأعراف",
+    "numberOfAyahs": 206,
+    "revelationType": "Meccan"
+  },
+  {
+    "number": 8,
+    "englishName": "Al-Anfal",
+    "name": "الأنفال",
+    "numberOfAyahs": 75,
+    "revelationType": "Medinan"
+  },
+  {
+    "number": 9,
+    "englishName": "At-Tawbah",
+    "name": "التوبة",
+    "numberOfAyahs": 129,
+    "revelationType": "Medinan"
+  },
+  {
+    "number": 10,
+    "englishName": "Yunus",
+    "name": "يونس",
+    "numberOfAyahs": 109,
+    "revelationType": "Meccan"
+  },
+  {
+    "number": 11,
+    "englishName": "Hud",
+    "name": "هود",
+    "numberOfAyahs": 123,
+    "revelationType": "Meccan"
+  },
+  {
+    "number": 12,
+    "englishName": "Yusuf",
+    "name": "يوسف",
+    "numberOfAyahs": 111,
+    "revelationType": "Meccan"
+  },
+  {
+    "number": 13,
+    "englishName": "Ar-Rad",
+    "name": "الرعد",
+    "numberOfAyahs": 43,
+    "revelationType": "Medinan"
+  },
+  {
+    "number": 14,
+    "englishName": "Ibrahim",
+    "name": "إبراهيم",
+    "numberOfAyahs": 52,
+    "revelationType": "Meccan"
+  },
+  {
+    "number": 15,
+    "englishName": "Al-Hijr",
+    "name": "الحجر",
+    "numberOfAyahs": 99,
+    "revelationType": "Meccan"
+  },
+  {
+    "number": 16,
+    "englishName": "An-Nahl",
+    "name": "النحل",
+    "numberOfAyahs": 128,
+    "revelationType": "Meccan"
+  },
+  {
+    "number": 17,
+    "englishName": "Al-Isra",
+    "name": "الإسراء",
+    "numberOfAyahs": 111,
+    "revelationType": "Meccan"
+  },
+  {
+    "number": 18,
+    "englishName": "Al-Kahf",
+    "name": "الكهف",
+    "numberOfAyahs": 110,
+    "revelationType": "Meccan"
+  },
+  {
+    "number": 19,
+    "englishName": "Maryam",
+    "name": "مريم",
+    "numberOfAyahs": 98,
+    "revelationType": "Meccan"
+  },
+  {
+    "number": 20,
+    "englishName": "Ta-Ha",
+    "name": "طه",
+    "numberOfAyahs": 135,
+    "revelationType": "Meccan"
+  },
+  {
+    "number": 21,
+    "englishName": "Al-Anbiya",
+    "name": "الأنبياء",
+    "numberOfAyahs": 112,
+    "revelationType": "Meccan"
+  },
+  {
+    "number": 22,
+    "englishName": "Al-Hajj",
+    "name": "الحج",
+    "numberOfAyahs": 78,
+    "revelationType": "Medinan"
+  },
+  {
+    "number": 23,
+    "englishName": "Al-Muminun",
+    "name": "المؤمنون",
+    "numberOfAyahs": 118,
+    "revelationType": "Meccan"
+  },
+  {
+    "number": 24,
+    "englishName": "An-Nur",
+    "name": "النور",
+    "numberOfAyahs": 64,
+    "revelationType": "Medinan"
+  },
+  {
+    "number": 25,
+    "englishName": "Al-Furqan",
+    "name": "الفرقان",
+    "numberOfAyahs": 77,
+    "revelationType": "Meccan"
+  },
+  {
+    "number": 26,
+    "englishName": "Ash-Shuara",
+    "name": "الشعراء",
+    "numberOfAyahs": 227,
+    "revelationType": "Meccan"
+  },
+  {
+    "number": 27,
+    "englishName": "An-Naml",
+    "name": "النمل",
+    "numberOfAyahs": 93,
+    "revelationType": "Meccan"
+  },
+  {
+    "number": 28,
+    "englishName": "Al-Qasas",
+    "name": "القصص",
+    "numberOfAyahs": 88,
+    "revelationType": "Meccan"
+  },
+  {
+    "number": 29,
+    "englishName": "Al-Ankabut",
+    "name": "العنكبوت",
+    "numberOfAyahs": 69,
+    "revelationType": "Meccan"
+  },
+  {
+    "number": 30,
+    "englishName": "Ar-Rum",
+    "name": "الروم",
+    "numberOfAyahs": 60,
+    "revelationType": "Meccan"
+  },
+  {
+    "number": 31,
+    "englishName": "Luqman",
+    "name": "لقمان",
+    "numberOfAyahs": 34,
+    "revelationType": "Meccan"
+  },
+  {
+    "number": 32,
+    "englishName": "As-Sajdah",
+    "name": "السجدة",
+    "numberOfAyahs": 30,
+    "revelationType": "Meccan"
+  },
+  {
+    "number": 33,
+    "englishName": "Al-Ahzab",
+    "name": "الأحزاب",
+    "numberOfAyahs": 73,
+    "revelationType": "Medinan"
+  },
+  {
+    "number": 34,
+    "englishName": "Saba",
+    "name": "سبإ",
+    "numberOfAyahs": 54,
+    "revelationType": "Meccan"
+  },
+  {
+    "number": 35,
+    "englishName": "Fatir",
+    "name": "فاطر",
+    "numberOfAyahs": 45,
+    "revelationType": "Meccan"
+  },
+  {
+    "number": 36,
+    "englishName": "Ya-Sin",
+    "name": "يس",
+    "numberOfAyahs": 83,
+    "revelationType": "Meccan"
+  },
+  {
+    "number": 37,
+    "englishName": "As-Saffat",
+    "name": "الصافات",
+    "numberOfAyahs": 182,
+    "revelationType": "Meccan"
+  },
+  {
+    "number": 38,
+    "englishName": "Sad",
+    "name": "ص",
+    "numberOfAyahs": 88,
+    "revelationType": "Meccan"
+  },
+  {
+    "number": 39,
+    "englishName": "Az-Zumar",
+    "name": "الزمر",
+    "numberOfAyahs": 75,
+    "revelationType": "Meccan"
+  },
+  {
+    "number": 40,
+    "englishName": "Ghafir",
+    "name": "غافر",
+    "numberOfAyahs": 85,
+    "revelationType": "Meccan"
+  },
+  {
+    "number": 41,
+    "englishName": "Fussilat",
+    "name": "فصلت",
+    "numberOfAyahs": 54,
+    "revelationType": "Meccan"
+  },
+  {
+    "number": 42,
+    "englishName": "Ash-Shura",
+    "name": "الشورى",
+    "numberOfAyahs": 53,
+    "revelationType": "Meccan"
+  },
+  {
+    "number": 43,
+    "englishName": "Az-Zukhruf",
+    "name": "الزخرف",
+    "numberOfAyahs": 89,
+    "revelationType": "Meccan"
+  },
+  {
+    "number": 44,
+    "englishName": "Ad-Dukhan",
+    "name": "الدخان",
+    "numberOfAyahs": 59,
+    "revelationType": "Meccan"
+  },
+  {
+    "number": 45,
+    "englishName": "Al-Jathiyah",
+    "name": "الجاثية",
+    "numberOfAyahs": 37,
+    "revelationType": "Meccan"
+  },
+  {
+    "number": 46,
+    "englishName": "Al-Ahqaf",
+    "name": "الأحقاف",
+    "numberOfAyahs": 35,
+    "revelationType": "Meccan"
+  },
+  {
+    "number": 47,
+    "englishName": "Muhammad",
+    "name": "محمد",
+    "numberOfAyahs": 38,
+    "revelationType": "Medinan"
+  },
+  {
+    "number": 48,
+    "englishName": "Al-Fath",
+    "name": "الفتح",
+    "numberOfAyahs": 29,
+    "revelationType": "Medinan"
+  },
+  {
+    "number": 49,
+    "englishName": "Al-Hujurat",
+    "name": "الحجرات",
+    "numberOfAyahs": 18,
+    "revelationType": "Medinan"
+  },
+  {
+    "number": 50,
+    "englishName": "Qaf",
+    "name": "ق",
+    "numberOfAyahs": 45,
+    "revelationType": "Meccan"
+  },
+  {
+    "number": 51,
+    "englishName": "Adh-Dhariyat",
+    "name": "الذاريات",
+    "numberOfAyahs": 60,
+    "revelationType": "Meccan"
+  },
+  {
+    "number": 52,
+    "englishName": "At-Tur",
+    "name": "الطور",
+    "numberOfAyahs": 49,
+    "revelationType": "Meccan"
+  },
+  {
+    "number": 53,
+    "englishName": "An-Najm",
+    "name": "النجم",
+    "numberOfAyahs": 62,
+    "revelationType": "Meccan"
+  },
+  {
+    "number": 54,
+    "englishName": "Al-Qamar",
+    "name": "القمر",
+    "numberOfAyahs": 55,
+    "revelationType": "Meccan"
+  },
+  {
+    "number": 55,
+    "englishName": "Ar-Rahman",
+    "name": "الرحمن",
+    "numberOfAyahs": 78,
+    "revelationType": "Medinan"
+  },
+  {
+    "number": 56,
+    "englishName": "Al-Waqiah",
+    "name": "الواقعة",
+    "numberOfAyahs": 96,
+    "revelationType": "Meccan"
+  },
+  {
+    "number": 57,
+    "englishName": "Al-Hadid",
+    "name": "الحديد",
+    "numberOfAyahs": 29,
+    "revelationType": "Medinan"
+  },
+  {
+    "number": 58,
+    "englishName": "Al-Mujadila",
+    "name": "المجادلة",
+    "numberOfAyahs": 22,
+    "revelationType": "Medinan"
+  },
+  {
+    "number": 59,
+    "englishName": "Al-Hashr",
+    "name": "الحشر",
+    "numberOfAyahs": 24,
+    "revelationType": "Medinan"
+  },
+  {
+    "number": 60,
+    "englishName": "Al-Mumtahanah",
+    "name": "الممتحنة",
+    "numberOfAyahs": 13,
+    "revelationType": "Medinan"
+  },
+  {
+    "number": 61,
+    "englishName": "As-Saff",
+    "name": "الصف",
+    "numberOfAyahs": 14,
+    "revelationType": "Medinan"
+  },
+  {
+    "number": 62,
+    "englishName": "Al-Jumuah",
+    "name": "الجمعة",
+    "numberOfAyahs": 11,
+    "revelationType": "Medinan"
+  },
+  {
+    "number": 63,
+    "englishName": "Al-Munafiqun",
+    "name": "المنافقون",
+    "numberOfAyahs": 11,
+    "revelationType": "Medinan"
+  },
+  {
+    "number": 64,
+    "englishName": "At-Taghabun",
+    "name": "التغابن",
+    "numberOfAyahs": 18,
+    "revelationType": "Medinan"
+  },
+  {
+    "number": 65,
+    "englishName": "At-Talaq",
+    "name": "الطلاق",
+    "numberOfAyahs": 12,
+    "revelationType": "Medinan"
+  },
+  {
+    "number": 66,
+    "englishName": "At-Tahrim",
+    "name": "التحريم",
+    "numberOfAyahs": 12,
+    "revelationType": "Medinan"
+  },
+  {
+    "number": 67,
+    "englishName": "Al-Mulk",
+    "name": "الملك",
+    "numberOfAyahs": 30,
+    "revelationType": "Meccan"
+  },
+  {
+    "number": 68,
+    "englishName": "Al-Qalam",
+    "name": "القلم",
+    "numberOfAyahs": 52,
+    "revelationType": "Meccan"
+  },
+  {
+    "number": 69,
+    "englishName": "Al-Haqqah",
+    "name": "الحاقة",
+    "numberOfAyahs": 52,
+    "revelationType": "Meccan"
+  },
+  {
+    "number": 70,
+    "englishName": "Al-Maarij",
+    "name": "المعارج",
+    "numberOfAyahs": 44,
+    "revelationType": "Meccan"
+  },
+  {
+    "number": 71,
+    "englishName": "Nuh",
+    "name": "نوح",
+    "numberOfAyahs": 28,
+    "revelationType": "Meccan"
+  },
+  {
+    "number": 72,
+    "englishName": "Al-Jinn",
+    "name": "الجن",
+    "numberOfAyahs": 28,
+    "revelationType": "Meccan"
+  },
+  {
+    "number": 73,
+    "englishName": "Al-Muzzammil",
+    "name": "المزمل",
+    "numberOfAyahs": 20,
+    "revelationType": "Meccan"
+  },
+  {
+    "number": 74,
+    "englishName": "Al-Muddaththir",
+    "name": "المدثر",
+    "numberOfAyahs": 56,
+    "revelationType": "Meccan"
+  },
+  {
+    "number": 75,
+    "englishName": "Al-Qiyamah",
+    "name": "القيامة",
+    "numberOfAyahs": 40,
+    "revelationType": "Meccan"
+  },
+  {
+    "number": 76,
+    "englishName": "Al-Insan",
+    "name": "الإنسان",
+    "numberOfAyahs": 31,
+    "revelationType": "Medinan"
+  },
+  {
+    "number": 77,
+    "englishName": "Al-Mursalat",
+    "name": "المرسلات",
+    "numberOfAyahs": 50,
+    "revelationType": "Meccan"
+  },
+  {
+    "number": 78,
+    "englishName": "An-Naba",
+    "name": "النبأ",
+    "numberOfAyahs": 40,
+    "revelationType": "Meccan"
+  },
+  {
+    "number": 79,
+    "englishName": "An-Naziat",
+    "name": "النازعات",
+    "numberOfAyahs": 46,
+    "revelationType": "Meccan"
+  },
+  {
+    "number": 80,
+    "englishName": "Abasa",
+    "name": "عبس",
+    "numberOfAyahs": 42,
+    "revelationType": "Meccan"
+  },
+  {
+    "number": 81,
+    "englishName": "At-Takwir",
+    "name": "التكوير",
+    "numberOfAyahs": 29,
+    "revelationType": "Meccan"
+  },
+  {
+    "number": 82,
+    "englishName": "Al-Infitar",
+    "name": "الإنفطار",
+    "numberOfAyahs": 19,
+    "revelationType": "Meccan"
+  },
+  {
+    "number": 83,
+    "englishName": "Al-Mutaffifin",
+    "name": "المطففين",
+    "numberOfAyahs": 36,
+    "revelationType": "Meccan"
+  },
+  {
+    "number": 84,
+    "englishName": "Al-Inshiqaq",
+    "name": "الإنشقاق",
+    "numberOfAyahs": 25,
+    "revelationType": "Meccan"
+  },
+  {
+    "number": 85,
+    "englishName": "Al-Buruj",
+    "name": "البروج",
+    "numberOfAyahs": 22,
+    "revelationType": "Meccan"
+  },
+  {
+    "number": 86,
+    "englishName": "At-Tariq",
+    "name": "الطارق",
+    "numberOfAyahs": 17,
+    "revelationType": "Meccan"
+  },
+  {
+    "number": 87,
+    "englishName": "Al-Ala",
+    "name": "الأعلى",
+    "numberOfAyahs": 19,
+    "revelationType": "Meccan"
+  },
+  {
+    "number": 88,
+    "englishName": "Al-Ghashiyah",
+    "name": "الغاشية",
+    "numberOfAyahs": 26,
+    "revelationType": "Meccan"
+  },
+  {
+    "number": 89,
+    "englishName": "Al-Fajr",
+    "name": "الفجر",
+    "numberOfAyahs": 30,
+    "revelationType": "Meccan"
+  },
+  {
+    "number": 90,
+    "englishName": "Al-Balad",
+    "name": "البلد",
+    "numberOfAyahs": 20,
+    "revelationType": "Meccan"
+  },
+  {
+    "number": 91,
+    "englishName": "Ash-Shams",
+    "name": "الشمس",
+    "numberOfAyahs": 15,
+    "revelationType": "Meccan"
+  },
+  {
+    "number": 92,
+    "englishName": "Al-Layl",
+    "name": "الليل",
+    "numberOfAyahs": 21,
+    "revelationType": "Meccan"
+  },
+  {
+    "number": 93,
+    "englishName": "Ad-Duhaa",
+    "name": "الضحى",
+    "numberOfAyahs": 11,
+    "revelationType": "Meccan"
+  },
+  {
+    "number": 94,
+    "englishName": "Ash-Sharh",
+    "name": "الشرح",
+    "numberOfAyahs": 8,
+    "revelationType": "Meccan"
+  },
+  {
+    "number": 95,
+    "englishName": "At-Tin",
+    "name": "التين",
+    "numberOfAyahs": 8,
+    "revelationType": "Meccan"
+  },
+  {
+    "number": 96,
+    "englishName": "Al-Alaq",
+    "name": "العلق",
+    "numberOfAyahs": 19,
+    "revelationType": "Meccan"
+  },
+  {
+    "number": 97,
+    "englishName": "Al-Qadr",
+    "name": "القدر",
+    "numberOfAyahs": 5,
+    "revelationType": "Meccan"
+  },
+  {
+    "number": 98,
+    "englishName": "Al-Bayyinah",
+    "name": "البينة",
+    "numberOfAyahs": 8,
+    "revelationType": "Medinan"
+  },
+  {
+    "number": 99,
+    "englishName": "Az-Zalzalah",
+    "name": "الزلزلة",
+    "numberOfAyahs": 8,
+    "revelationType": "Medinan"
+  },
+  {
+    "number": 100,
+    "englishName": "Al-Adiyat",
+    "name": "العاديات",
+    "numberOfAyahs": 11,
+    "revelationType": "Meccan"
+  },
+  {
+    "number": 101,
+    "englishName": "Al-Qariah",
+    "name": "القارعة",
+    "numberOfAyahs": 11,
+    "revelationType": "Meccan"
+  },
+  {
+    "number": 102,
+    "englishName": "At-Takathur",
+    "name": "التكاثر",
+    "numberOfAyahs": 8,
+    "revelationType": "Meccan"
+  },
+  {
+    "number": 103,
+    "englishName": "Al-Asr",
+    "name": "العصر",
+    "numberOfAyahs": 3,
+    "revelationType": "Meccan"
+  },
+  {
+    "number": 104,
+    "englishName": "Al-Humazah",
+    "name": "الهمزة",
+    "numberOfAyahs": 9,
+    "revelationType": "Meccan"
+  },
+  {
+    "number": 105,
+    "englishName": "Al-Fil",
+    "name": "الفيل",
+    "numberOfAyahs": 5,
+    "revelationType": "Meccan"
+  },
+  {
+    "number": 106,
+    "englishName": "Quraysh",
+    "name": "قريش",
+    "numberOfAyahs": 4,
+    "revelationType": "Meccan"
+  },
+  {
+    "number": 107,
+    "englishName": "Al-Maun",
+    "name": "الماعون",
+    "numberOfAyahs": 7,
+    "revelationType": "Meccan"
+  },
+  {
+    "number": 108,
+    "englishName": "Al-Kawthar",
+    "name": "الكوثر",
+    "numberOfAyahs": 3,
+    "revelationType": "Meccan"
+  },
+  {
+    "number": 109,
+    "englishName": "Al-Kafirun",
+    "name": "الكافرون",
+    "numberOfAyahs": 6,
+    "revelationType": "Meccan"
+  },
+  {
+    "number": 110,
+    "englishName": "An-Nasr",
+    "name": "النصر",
+    "numberOfAyahs": 3,
+    "revelationType": "Medinan"
+  },
+  {
+    "number": 111,
+    "englishName": "Al-Masad",
+    "name": "المسد",
+    "numberOfAyahs": 5,
+    "revelationType": "Meccan"
+  },
+  {
+    "number": 112,
+    "englishName": "Al-Ikhlas",
+    "name": "الإخلاص",
+    "numberOfAyahs": 4,
+    "revelationType": "Meccan"
+  },
+  {
+    "number": 113,
+    "englishName": "Al-Falaq",
+    "name": "الفلق",
+    "numberOfAyahs": 5,
+    "revelationType": "Meccan"
+  },
+  {
+    "number": 114,
+    "englishName": "An-Nas",
+    "name": "الناس",
+    "numberOfAyahs": 6,
+    "revelationType": "Meccan"
+  }
+]

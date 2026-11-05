@@ -1,19 +1,25 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:islam/core/storage/hive_service.dart';
+import 'package:islam/core/time/timezone_helper.dart';
 import 'package:islam/features/prayer/data/prayer_repository.dart';
 import 'package:islam/features/prayer/domain/prayer_day_data.dart';
 import 'package:islam/features/prayer/domain/prayer_time_entry.dart';
+import 'package:islam/features/settings/presentation/settings_controller.dart';
 
 final prayerTimesProvider = FutureProvider<List<PrayerTimeEntry>>((ref) async {
   final repo = ref.watch(prayerRepositoryProvider);
-  return repo.getPrayerTimes(DateTime.now());
+  final settings = ref.watch(settingsControllerProvider);
+  final now = appNowForTimezone(settings.timezone);
+  return repo.getPrayerTimes(now);
 });
 
 /// Full prayer-day bundle (Hijri/Gregorian labels, sunrise/sunset, prayer
 /// list) for today, resolved using the currently selected country/timezone.
 final prayerDayDataProvider = FutureProvider<PrayerDayData>((ref) async {
   final repo = ref.watch(prayerRepositoryProvider);
-  return repo.getPrayerDayData(DateTime.now());
+  final settings = ref.watch(settingsControllerProvider);
+  final now = appNowForTimezone(settings.timezone);
+  return repo.getPrayerDayData(now);
 });
 
 const kTrackedPrayerNames = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];

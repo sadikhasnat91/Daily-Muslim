@@ -52,23 +52,35 @@ class CountryOption {
       utcOffsetLabel = (json['utcOffsetLabel'] as String?) ?? utcOffsetLabel;
     }
 
-    final latitude =
-        ((json['latitude'] ?? json['lat']) as num?)?.toDouble() ?? 0;
-    final longitude =
-        ((json['longitude'] ?? json['lng'] ?? json['lon']) as num?)
-            ?.toDouble() ??
-        0;
+    double parseCoordinate(dynamic raw) {
+      if (raw == null) return 0.0;
+      if (raw is num) return raw.toDouble();
+      if (raw is String) return double.tryParse(raw) ?? 0.0;
+      return 0.0;
+    }
+
+    var latitude = parseCoordinate(json['latitude'] ?? json['lat']);
+    var longitude = parseCoordinate(json['longitude'] ?? json['lng'] ?? json['lon']);
+
+    final isoCode = ((json['iso2'] ?? json['isoCode']) as String? ?? 'XX')
+        .toUpperCase();
+    final countryName = (json['name'] as String?) ?? 'Unknown';
+
+    if ((latitude == 0.0 && longitude == 0.0) ||
+        (isoCode == 'BD' || countryName.toLowerCase() == 'bangladesh')) {
+      if (isoCode == 'BD' || countryName.toLowerCase() == 'bangladesh') {
+        latitude = 23.8103;
+        longitude = 90.4125;
+      }
+    }
 
     return CountryOption(
-      name: (json['name'] as String?) ?? 'Unknown',
-      isoCode: ((json['iso2'] ?? json['isoCode']) as String? ?? 'XX')
-          .toUpperCase(),
+      name: countryName,
+      isoCode: isoCode,
       flagEmoji:
           (json['emoji'] as String?) ??
           (json['flagEmoji'] as String?) ??
-          _flagEmojiForIsoCode(
-            ((json['iso2'] ?? json['isoCode']) as String?) ?? 'XX',
-          ),
+          _flagEmojiForIsoCode(isoCode),
       capital:
           (json['capital'] as String?) ??
           (json['name'] as String?) ??

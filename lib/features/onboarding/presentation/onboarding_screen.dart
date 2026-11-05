@@ -123,13 +123,24 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                       if (selected == null || !mounted) {
                         return;
                       }
+                      var lat = selected.latitude;
+                      var lng = selected.longitude;
+                      if ((lat == 0.0 && lng == 0.0) ||
+                          selected.isoCode == 'BD' ||
+                          selected.name.toLowerCase() == 'bangladesh') {
+                        final resolved = SettingsController.resolveCoordinates(
+                                selected.capital, selected.name) ??
+                            (23.8103, 90.4125);
+                        lat = resolved.$1;
+                        lng = resolved.$2;
+                      }
                       setState(() {
                         _selectedCountry = selected.name;
                         _selectedCountryCode = selected.isoCode;
                         _selectedTimezone = selected.timezoneId;
                         _selectedCity = selected.capital;
-                        _selectedLatitude = selected.latitude;
-                        _selectedLongitude = selected.longitude;
+                        _selectedLatitude = lat;
+                        _selectedLongitude = lng;
                       });
                     },
                   ),

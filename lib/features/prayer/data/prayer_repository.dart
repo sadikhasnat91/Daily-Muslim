@@ -1,4 +1,3 @@
-import 'package:islam/features/prayer/data/static_prayer_data.dart';
 import 'package:adhan_dart/adhan_dart.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hijri/hijri_calendar.dart';
@@ -55,7 +54,9 @@ class PrayerRepository {
     double lat = settings.latitude;
     double lng = settings.longitude;
     final countryLower = settings.country.trim().toLowerCase();
-    final isBangladesh = countryLower == 'bangladesh' || settings.countryCode.toUpperCase() == 'BD';
+    final isBangladesh = countryLower == 'bangladesh' ||
+        countryLower.isEmpty ||
+        settings.countryCode.toUpperCase() == 'BD';
 
     if ((lat == 0.0 && lng == 0.0) || (isBangladesh && (lng < 80.0 || lat < 20.0))) {
       final resolved = SettingsController.resolveCoordinates(settings.city, settings.country) ?? (23.8103, 90.4125);
@@ -64,8 +65,9 @@ class PrayerRepository {
     }
 
     final coords = Coordinates(lat, lng);
-    final params = _calculationParametersFor(settings.prayerMethod);
-    final isHanafi = settings.madhhab.toLowerCase() == 'hanafi' || (isBangladesh && settings.madhhab.isEmpty);
+    final methodId = isBangladesh ? 1 : settings.prayerMethod;
+    final params = _calculationParametersFor(methodId);
+    final isHanafi = isBangladesh ? true : (settings.madhhab.toLowerCase() == 'hanafi');
     final adjusted = params.copyWith(
       madhab: isHanafi ? Madhab.hanafi : Madhab.shafi,
       highLatitudeRule: HighLatitudeRule.middleOfTheNight,
@@ -77,7 +79,10 @@ class PrayerRepository {
       calculationParameters: adjusted,
     );
 
-    final localTimezone = settings.timezone.trim();
+    final localTimezone = (isBangladesh && (settings.timezone.isEmpty || settings.timezone == 'Asia/Riyadh'))
+        ? 'Asia/Dhaka'
+        : (settings.timezone.trim().isEmpty ? 'Asia/Dhaka' : settings.timezone.trim());
+
     final normalizedSunrise = _normalizeInstantForTimezone(
       times.sunrise,
       localTimezone,
@@ -113,9 +118,9 @@ class PrayerRepository {
     final gregorian = DateFormat('EEEE, d MMMM, y', 'en_US').format(date);
     final hijri = _hijriLabel(date);
     return PrayerDayData(
-      city: settings.city,
-      country: settings.country,
-      timezone: settings.timezone,
+      city: isBangladesh && settings.city.trim().isEmpty ? 'Dhaka' : settings.city,
+      country: isBangladesh && settings.country.trim().isEmpty ? 'Bangladesh' : settings.country,
+      timezone: localTimezone,
       hijriLabel: hijri,
       gregorianLabel: gregorian,
       prayers: prayers,
@@ -151,16 +156,10 @@ class PrayerRepository {
         settings: appSettings,
       );
     } catch (_) {
-      calculated = (await _tryLoadStaticPrayerData(
-            appSettings.country,
-            appSettings.city,
-            base,
-            appSettings.timezone,
-          )) ??
-          calculatePrayerDayForSettings(
-            date: base,
-            settings: AppSettings.defaults,
-          );
+      calculated = calculatePrayerDayForSettings(
+        date: base,
+        settings: AppSettings.defaults,
+      );
     }
 
     await _hive.dailyProgressBox.put('prayer_day_cache', {
@@ -177,73 +176,6 @@ class PrayerRepository {
     });
 
     return calculated;
-  }
-
-  Future<PrayerDayData?> _tryLoadStaticPrayerData(String country, String city, DateTime date, String fallbackTimezone) async {
-    try {
-      final countryLower = country.trim().toLowerCase();
-      Map<String, dynamic> data;
-      if (countryLower == 'bangladesh') {
-        data = bangladeshPrayerData;
-      } else if (countryLower == 'afghanistan') {
-        data = afghanistanPrayerData;
-      } else {
-        return null;
-      }
-      
-      final List<dynamic> prayerTimes = data['prayer_times'];
-      Map<String, dynamic>? cityData;
-      for (final e in prayerTimes) {
-        if ((e['city'] as String).toLowerCase() == city.trim().toLowerCase()) {
-          cityData = e as Map<String, dynamic>;
-          break;
-        }
-      }
-      cityData ??= prayerTimes.first as Map<String, dynamic>;
-      
-      final String staticTimezone = data['timezone'] ?? fallbackTimezone;
-      
-      DateTime parseTime(String timeStr) {
-        final format = DateFormat("hh:mm a");
-        final parsedTime = format.parse(timeStr);
-        return buildDateTimeForTimezone(
-          staticTimezone,
-          year: date.year,
-          month: date.month,
-          day: date.day,
-          hour: parsedTime.hour,
-          minute: parsedTime.minute,
-        );
-      }
-      
-      final prayers = [
-        PrayerTimeEntry(name: 'Fajr', time: parseTime(cityData['fajr'])),
-        PrayerTimeEntry(name: 'Dhuhr', time: parseTime(cityData['dhuhr'])),
-        PrayerTimeEntry(name: 'Asr', time: parseTime(cityData['asr'])),
-        PrayerTimeEntry(name: 'Maghrib', time: parseTime(cityData['maghrib'])),
-        PrayerTimeEntry(name: 'Isha', time: parseTime(cityData['isha'])),
-      ];
-      
-      final sunrise = parseTime(cityData['sunrise']);
-      // using maghrib as a fallback for sunset since sunset is not explicitly in the json
-      final sunset = parseTime(cityData['maghrib']);
-
-      final gregorian = DateFormat('EEEE, d MMMM, y', 'en_US').format(date);
-      final hijriLabel = data['hijri_date'] ?? _hijriLabel(date);
-      
-      return PrayerDayData(
-        city: cityData['city'],
-        country: country,
-        timezone: staticTimezone,
-        hijriLabel: hijriLabel,
-        gregorianLabel: gregorian,
-        prayers: prayers,
-        sunrise: sunrise,
-        sunset: sunset,
-      );
-    } catch (_) {
-      return null;
-    }
   }
 
   static CalculationParameters _calculationParametersFor(int methodId) {

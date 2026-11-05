@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:islam/features/location/data/bd_districts.dart';
 import 'package:islam/features/prayer/data/prayer_repository.dart';
 import 'package:islam/features/settings/domain/app_settings.dart';
 import 'package:timezone/data/latest_all.dart' as tz_data;
@@ -183,6 +184,67 @@ void main() {
       expect(maghrib.hour, equals(17));
       // Isha is around 6:30 - 6:45 PM (NOT 12:54 AM!)
       expect(isha.hour, equals(18));
+    });
+
+    test('should calculate accurate Bangladesh times from AppSettings.defaults', () {
+      final day = PrayerRepository.calculatePrayerDayForSettings(
+        date: DateTime(2026, 11, 4),
+        settings: AppSettings.defaults,
+      );
+
+      final fajr = day.prayers.firstWhere((p) => p.name == 'Fajr').time;
+      final dhuhr = day.prayers.firstWhere((p) => p.name == 'Dhuhr').time;
+      final asr = day.prayers.firstWhere((p) => p.name == 'Asr').time;
+      final maghrib = day.prayers.firstWhere((p) => p.name == 'Maghrib').time;
+      final isha = day.prayers.firstWhere((p) => p.name == 'Isha').time;
+
+      expect(day.country, equals('Bangladesh'));
+      expect(day.city, equals('Dhaka'));
+      expect(day.timezone, equals('Asia/Dhaka'));
+      expect(fajr.hour, equals(4));
+      expect(dhuhr.hour, equals(11));
+      expect(asr.hour, equals(15));
+      expect(maghrib.hour, equals(17));
+      expect(isha.hour, equals(18));
+    });
+
+    test('should resolve Bangladesh districts accurately with distinct coordinates', () {
+      final sylhet = findBdDistrict('Sylhet');
+      final rajshahi = findBdDistrict('Rajshahi');
+      final chittagong = findBdDistrict('Chattogram');
+
+      expect(sylhet, isNotNull);
+      expect(rajshahi, isNotNull);
+      expect(chittagong, isNotNull);
+
+      // Sylhet is east of Dhaka (higher longitude, earlier prayer times)
+      expect(sylhet!.longitude, greaterThan(90.4125));
+      // Rajshahi is west of Dhaka (lower longitude, later prayer times)
+      expect(rajshahi!.longitude, lessThan(90.4125));
+
+      final sylhetDay = PrayerRepository.calculatePrayerDayForSettings(
+        date: DateTime(2026, 11, 4),
+        settings: AppSettings.defaults.copyWith(
+          city: sylhet.nameEn,
+          latitude: sylhet.latitude,
+          longitude: sylhet.longitude,
+        ),
+      );
+
+      final rajshahiDay = PrayerRepository.calculatePrayerDayForSettings(
+        date: DateTime(2026, 11, 4),
+        settings: AppSettings.defaults.copyWith(
+          city: rajshahi.nameEn,
+          latitude: rajshahi.latitude,
+          longitude: rajshahi.longitude,
+        ),
+      );
+
+      final sylhetFajr = sylhetDay.prayers.firstWhere((p) => p.name == 'Fajr').time;
+      final rajshahiFajr = rajshahiDay.prayers.firstWhere((p) => p.name == 'Fajr').time;
+
+      // In Sylhet, Fajr is earlier than in Rajshahi by ~12-14 minutes
+      expect(sylhetFajr.isBefore(rajshahiFajr), isTrue);
     });
   });
 }

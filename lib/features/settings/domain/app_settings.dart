@@ -55,23 +55,23 @@ class AppSettings {
   static const defaults = AppSettings(
     themeMode: ThemeMode.dark,
     notificationsEnabled: true,
-    city: 'Makkah',
-    country: 'Saudi Arabia',
-    countryCode: 'SA',
-    timezone: 'Asia/Riyadh',
+    city: 'Dhaka',
+    country: 'Bangladesh',
+    countryCode: 'BD',
+    timezone: 'Asia/Dhaka',
     profileName: '',
     profileEmail: '',
     profileImageUrl: '',
     onboardingComplete: false,
-    prayerMethod: 4,
-    madhhab: 'Shafi',
+    prayerMethod: 1, // Karachi (University of Islamic Sciences) - standard for Bangladesh Islamic Foundation
+    madhhab: 'Hanafi', // Hanafi is standard in Bangladesh
     azanEnabled: true,
     vibrationEnabled: true,
     silentMode: false,
     muazzinVoice: 'Makkah',
     perPrayerNotifications: defaultPerPrayerNotifications,
-    latitude: 21.4225,
-    longitude: 39.8262,
+    latitude: 23.8103,
+    longitude: 90.4125,
   );
 
   AppSettings copyWith({
@@ -152,16 +152,16 @@ class AppSettings {
     return AppSettings(
       themeMode: mode,
       notificationsEnabled: (json['notificationsEnabled'] as bool?) ?? true,
-      city: (json['city'] as String?) ?? 'Makkah',
-      country: (json['country'] as String?) ?? 'Saudi Arabia',
-      countryCode: (json['countryCode'] as String?) ?? 'SA',
-      timezone: (json['timezone'] as String?) ?? 'Asia/Riyadh',
+      city: (json['city'] as String?) ?? 'Dhaka',
+      country: (json['country'] as String?) ?? 'Bangladesh',
+      countryCode: (json['countryCode'] as String?) ?? 'BD',
+      timezone: (json['timezone'] as String?) ?? 'Asia/Dhaka',
       profileName: (json['profileName'] as String?) ?? '',
       profileEmail: (json['profileEmail'] as String?) ?? '',
       profileImageUrl: (json['profileImageUrl'] as String?) ?? '',
       onboardingComplete: (json['onboardingComplete'] as bool?) ?? false,
-      prayerMethod: (json['prayerMethod'] as int?) ?? 4,
-      madhhab: (json['madhhab'] as String?) ?? 'Shafi',
+      prayerMethod: (json['prayerMethod'] as int?) ?? 1,
+      madhhab: (json['madhhab'] as String?) ?? 'Hanafi',
       azanEnabled: (json['azanEnabled'] as bool?) ?? true,
       vibrationEnabled: (json['vibrationEnabled'] as bool?) ?? true,
       silentMode: (json['silentMode'] as bool?) ?? false,
@@ -169,8 +169,8 @@ class AppSettings {
       perPrayerNotifications: _parsePerPrayerNotifications(
         json['perPrayerNotifications'],
       ),
-      latitude: ((json['latitude'] as num?) ?? 21.4225).toDouble(),
-      longitude: ((json['longitude'] as num?) ?? 39.8262).toDouble(),
+      latitude: ((json['latitude'] as num?) ?? 23.8103).toDouble(),
+      longitude: ((json['longitude'] as num?) ?? 90.4125).toDouble(),
     );
   }
 

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:islam/core/storage/hive_keys.dart';
 import 'package:islam/core/storage/hive_service.dart';
+import 'package:islam/features/location/data/bd_districts.dart';
 import 'package:islam/features/location/domain/country_option.dart';
 import 'package:islam/features/prayer/data/prayer_repository.dart';
 import 'package:islam/features/settings/domain/app_settings.dart';
@@ -20,15 +21,34 @@ class SettingsController extends Notifier<AppSettings> {
     var loaded = AppSettings.fromJson(raw);
     final countryLower = loaded.country.trim().toLowerCase();
     final isBangladesh = countryLower == 'bangladesh' || loaded.countryCode.toUpperCase() == 'BD';
+    final isOldDefaultMakkah = (countryLower == 'saudi arabia' || loaded.countryCode.toUpperCase() == 'SA') &&
+        (loaded.city.trim().toLowerCase() == 'makkah');
 
-    if ((loaded.latitude == 0.0 && loaded.longitude == 0.0) ||
-        (isBangladesh && (loaded.longitude < 80.0 || loaded.latitude < 20.0))) {
+    if (isOldDefaultMakkah) {
+      // Migrate old Saudi Arabia default directly to Bangladesh defaults
+      loaded = AppSettings.defaults.copyWith(
+        themeMode: loaded.themeMode,
+        profileName: loaded.profileName,
+        profileEmail: loaded.profileEmail,
+        profileImageUrl: loaded.profileImageUrl,
+        onboardingComplete: loaded.onboardingComplete,
+      );
+      HiveService.instance.settingsBox.put(HiveKeys.appSettings, loaded.toJson());
+    } else if ((loaded.latitude == 0.0 && loaded.longitude == 0.0) ||
+        (isBangladesh &&
+            (loaded.longitude < 80.0 ||
+                loaded.latitude < 20.0 ||
+                loaded.prayerMethod != 1 ||
+                loaded.madhhab.toLowerCase() != 'hanafi' ||
+                loaded.timezone.trim() != 'Asia/Dhaka'))) {
       final coords = resolveCoordinates(loaded.city, loaded.country) ?? (23.8103, 90.4125);
       loaded = loaded.copyWith(
+        city: loaded.city.isEmpty ? 'Dhaka' : loaded.city,
         latitude: coords.$1,
         longitude: coords.$2,
-        prayerMethod: loaded.prayerMethod == 3 && isBangladesh ? 1 : loaded.prayerMethod,
-        madhhab: isBangladesh && loaded.madhhab == 'Shafi' ? 'Hanafi' : loaded.madhhab,
+        timezone: isBangladesh ? 'Asia/Dhaka' : loaded.timezone,
+        prayerMethod: isBangladesh ? 1 : loaded.prayerMethod,
+        madhhab: isBangladesh ? 'Hanafi' : loaded.madhhab,
       );
       HiveService.instance.settingsBox.put(HiveKeys.appSettings, loaded.toJson());
     }
@@ -64,6 +84,58 @@ class SettingsController extends Notifier<AppSettings> {
     'bogura': (24.8465, 89.3777),
     'dinajpur': (25.6279, 88.6332),
     'cox\'s bazar': (21.4272, 92.0058),
+    'coxs bazar': (21.4272, 92.0058),
+    'faridpur': (23.6070, 89.8429),
+    'feni': (23.0159, 91.3976),
+    'jamalpur': (24.9375, 89.9377),
+    'jessore': (23.1664, 89.2081),
+    'jashore': (23.1664, 89.2081),
+    'kushtia': (23.9013, 89.1204),
+    'bagerhat': (22.6516, 89.7859),
+    'brahmanbaria': (23.9571, 91.1119),
+    'nawabganj': (24.5965, 88.2775),
+    'chapainawabganj': (24.5965, 88.2775),
+    'noakhali': (22.8696, 91.0994),
+    'pabna': (24.0064, 89.2372),
+    'sirajganj': (24.4534, 89.7008),
+    'tangail': (24.2513, 89.9167),
+    'kishoreganj': (24.4449, 90.7766),
+    'narsingdi': (23.9193, 90.7202),
+    'manikganj': (23.8644, 90.0047),
+    'munshiganj': (23.5422, 90.5305),
+    'chandpur': (23.2333, 90.6667),
+    'lakshmipur': (22.9425, 90.8412),
+    'bandarban': (22.1953, 92.2184),
+    'rangamati': (22.6533, 92.1789),
+    'khagrachhari': (23.1193, 91.9847),
+    'netrokona': (24.8709, 90.7279),
+    'sherpur': (25.0205, 90.0153),
+    'joypurhat': (25.1015, 89.0270),
+    'naogaon': (24.7936, 88.9318),
+    'natore': (24.4206, 88.9324),
+    'gaibandha': (25.3288, 89.5430),
+    'kurigram': (25.8054, 89.6362),
+    'lalmonirhat': (25.9923, 89.2847),
+    'nilphamari': (25.9318, 88.8560),
+    'panchagarh': (26.3411, 88.5542),
+    'thakurgaon': (26.0337, 88.4617),
+    'jhenaidah': (23.5448, 89.1539),
+    'magura': (23.4873, 89.4198),
+    'meherpur': (23.7622, 88.6318),
+    'narail': (23.1725, 89.5127),
+    'chuadanga': (23.6402, 88.8418),
+    'satkhira': (22.7185, 89.0705),
+    'barguna': (22.0953, 90.1121),
+    'bhola': (22.6859, 90.6481),
+    'jhalokati': (22.6406, 90.1987),
+    'patuakhali': (22.3596, 90.3299),
+    'pirojpur': (22.5841, 89.9720),
+    'habiganj': (24.3750, 91.4167),
+    'moulvibazar': (24.4829, 91.7774),
+    'sunamganj': (25.0658, 91.3950),
+    'shariatpur': (23.2423, 90.4348),
+    'madaripur': (23.1641, 90.1897),
+    'gopalganj': (23.0051, 89.8266),
     'makkah': (21.4225, 39.8262),
     'madinah': (24.5247, 39.5692),
     'riyadh': (24.7136, 46.6753),
@@ -92,7 +164,7 @@ class SettingsController extends Notifier<AppSettings> {
       return cityCoordinates[normalizedCity];
     }
     final normalizedCountry = country.trim().toLowerCase();
-    if (normalizedCountry == 'bangladesh') {
+    if (normalizedCountry == 'bangladesh' || normalizedCountry.isEmpty) {
       return (23.8103, 90.4125);
     } else if (normalizedCountry == 'saudi arabia') {
       return (21.4225, 39.8262);
@@ -105,10 +177,49 @@ class SettingsController extends Notifier<AppSettings> {
     } else if (normalizedCountry == 'united states' || normalizedCountry == 'usa') {
       return (40.7128, -74.0060);
     }
-    return null;
+    return (23.8103, 90.4125);
+  }
+
+  Future<void> setLocation({
+    required String city,
+    required double latitude,
+    required double longitude,
+    String? country,
+    String? countryCode,
+    String? timezone,
+  }) async {
+    final countryName = country ?? state.country;
+    final code = (countryCode ?? state.countryCode).toUpperCase();
+    final isBD = countryName.toLowerCase() == 'bangladesh' || code == 'BD';
+
+    state = state.copyWith(
+      city: city.trim(),
+      country: countryName,
+      countryCode: code,
+      timezone: timezone ?? (isBD ? 'Asia/Dhaka' : state.timezone),
+      latitude: latitude,
+      longitude: longitude,
+      prayerMethod: isBD ? 1 : state.prayerMethod,
+      madhhab: isBD ? 'Hanafi' : state.madhhab,
+    );
+    await _save();
+    await _rescheduleAzan();
   }
 
   Future<void> setCity(String city) async {
+    final district = findBdDistrict(city);
+    if (district != null) {
+      await setLocation(
+        city: district.nameEn,
+        latitude: district.latitude,
+        longitude: district.longitude,
+        country: 'Bangladesh',
+        countryCode: 'BD',
+        timezone: 'Asia/Dhaka',
+      );
+      return;
+    }
+
     final normalized = city.trim().toLowerCase();
     final coords = cityCoordinates[normalized] ?? resolveCoordinates(city, state.country);
     if (coords != null) {

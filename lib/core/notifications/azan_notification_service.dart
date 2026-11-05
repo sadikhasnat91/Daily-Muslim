@@ -98,13 +98,14 @@ class AzanNotificationService {
     await init();
     await cancelAll();
 
-    if (!settings.azanEnabled) {
+    if (!settings.notificationsEnabled || !settings.azanEnabled) {
       return;
     }
 
     final location = resolveTimezoneLocation(dayData.timezone) ??
-        resolveTimezoneLocation(settings.timezone);
-    final now = DateTime.now();
+        resolveTimezoneLocation(settings.timezone) ??
+        tz.local;
+    final nowTz = tz.TZDateTime.now(location);
 
     for (final prayer in dayData.prayers) {
       final enabled = settings.perPrayerNotifications[prayer.name] ?? true;
@@ -113,16 +114,12 @@ class AzanNotificationService {
       final id = _prayerNotificationIds[prayer.name];
       if (id == null) continue;
 
-      var scheduledTime = prayer.time;
-      if (scheduledTime.isBefore(now)) {
+      var tzTime = tz.TZDateTime.from(prayer.time, location);
+      if (!tzTime.isAfter(nowTz)) {
         // If the prayer time has already passed today, schedule it for tomorrow
         // so the alarm rings tomorrow morning without requiring an app relaunch.
-        scheduledTime = scheduledTime.add(const Duration(days: 1));
+        tzTime = tzTime.add(const Duration(days: 1));
       }
-
-      final tzTime = location != null
-          ? tz.TZDateTime.from(scheduledTime, location)
-          : tz.TZDateTime.from(scheduledTime, tz.local);
 
       await _plugin.zonedSchedule(
         id: id,

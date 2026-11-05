@@ -10,7 +10,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart' hide TextDirection;
-import 'package:islam/features/settings/domain/app_settings.dart';
 import 'package:islam/features/settings/presentation/settings_controller.dart';
 import 'package:islam/core/navigation/ui_actions.dart';
 import 'package:islam/core/storage/hive_service.dart';
@@ -19,6 +18,7 @@ import 'package:islam/core/ui/app_theme_tokens.dart';
 import 'package:islam/features/prayer/data/prayer_repository.dart';
 import 'package:islam/features/prayer/domain/prayer_day_data.dart';
 import 'package:islam/features/prayer/domain/prayer_time_entry.dart';
+import 'package:islam/features/location/presentation/district_selection_sheet.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -64,11 +64,87 @@ PrayerWindow? currentPrayerWindow(DateTime now, List<PrayerWindow> windows) {
     if (!now.isBefore(window.start) && now.isBefore(window.end)) {
       return window;
     }
-    if (now.isBefore(window.start)) {
-      return window;
+  }
+  return null;
+}
+
+class ActivePrayerState {
+  const ActivePrayerState({
+    required this.isCurrent,
+    required this.name,
+    required this.targetTime,
+    required this.subtitle,
+    required this.remaining,
+  });
+
+  final bool isCurrent;
+  final String name;
+  final DateTime targetTime;
+  final String subtitle;
+  final Duration remaining;
+}
+
+ActivePrayerState resolveActivePrayerState(
+  DateTime now,
+  List<(String, DateTime)> prayerTimes, {
+  DateTime? sunrise,
+}) {
+  if (prayerTimes.isEmpty) {
+    return ActivePrayerState(
+      isCurrent: false,
+      name: 'Fajr',
+      targetTime: now.add(const Duration(hours: 1)),
+      subtitle: 'Calculating...',
+      remaining: const Duration(hours: 1),
+    );
+  }
+
+  final windows = buildPrayerWindows(prayerTimes, sunrise: sunrise);
+
+  for (final window in windows) {
+    if (!now.isBefore(window.start) && now.isBefore(window.end)) {
+      final rem = window.end.difference(now);
+      final h = rem.inHours;
+      final m = rem.inMinutes.remainder(60);
+      return ActivePrayerState(
+        isCurrent: true,
+        name: window.name,
+        targetTime: window.end,
+        subtitle:
+            '${DateFormat('h:mm a').format(window.start)} → ${DateFormat('h:mm a').format(window.end)} • Ends in ${h}h ${m}m',
+        remaining: rem,
+      );
     }
   }
-  return windows.isNotEmpty ? windows.last : null;
+
+  for (final window in windows) {
+    if (now.isBefore(window.start)) {
+      final rem = window.start.difference(now);
+      final h = rem.inHours;
+      final m = rem.inMinutes.remainder(60);
+      return ActivePrayerState(
+        isCurrent: false,
+        name: window.name,
+        targetTime: window.start,
+        subtitle:
+            'Starts at ${DateFormat('h:mm a').format(window.start)} • In ${h}h ${m}m',
+        remaining: rem,
+      );
+    }
+  }
+
+  final firstTomorrow = windows.first.start.add(const Duration(days: 1));
+  final rem = firstTomorrow.difference(now);
+  final h = rem.inHours;
+  final m = rem.inMinutes.remainder(60);
+  return ActivePrayerState(
+    isCurrent: false,
+    name: windows.first.name,
+    targetTime: firstTomorrow,
+    subtitle:
+        'Starts tomorrow at ${DateFormat('h:mm a').format(firstTomorrow)} • In ${h}h ${m}m',
+    remaining: rem,
+  );
 }
 
 class _HomeScreenState extends ConsumerState<HomeScreen>
@@ -132,9 +208,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   }
 
   List<(String, DateTime)> _fallbackPrayerTimes(DateTime now) {
+    final settings = ref.read(settingsControllerProvider);
     final fallbackDay = PrayerRepository.calculatePrayerDayForSettings(
       date: now,
-      settings: AppSettings.defaults,
+      settings: settings,
     );
     return fallbackDay.prayers
         .map((entry) => (entry.name, entry.time))
@@ -319,28 +396,76 @@ class _DateHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cityName = dayData?.city.isNotEmpty == true ? dayData!.city : 'Dhaka';
+
     return Padding(
       padding: const EdgeInsets.only(top: AppSpacing.md),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Text(
-            dayData?.hijriLabel.isNotEmpty == true
-                ? dayData!.hijriLabel
-                : 'Hijri date loading...',
-            style: GoogleFonts.inter(
-              fontSize: 16,
-              color: AppColors.onSurfaceVariant,
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  dayData?.hijriLabel.isNotEmpty == true
+                      ? dayData!.hijriLabel
+                      : 'Hijri date loading...',
+                  style: GoogleFonts.inter(
+                    fontSize: 16,
+                    color: AppColors.onSurfaceVariant,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  dayData?.gregorianLabel.isNotEmpty == true
+                      ? dayData!.gregorianLabel
+                      : DateFormat('EEEE, MMMM d, yyyy').format(now),
+                  style: GoogleFonts.inter(
+                    fontSize: 13,
+                    color: AppColors.onSurfaceVariant.withOpacity(0.7),
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: 4),
-          Text(
-            dayData?.gregorianLabel.isNotEmpty == true
-                ? dayData!.gregorianLabel
-                : DateFormat('EEEE, MMMM d, yyyy').format(now),
-            style: GoogleFonts.inter(
-              fontSize: 13,
-              color: AppColors.onSurfaceVariant.withOpacity(0.7),
+          const SizedBox(width: 8),
+          InkWell(
+            onTap: () => showDistrictPicker(context),
+            borderRadius: BorderRadius.circular(20),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: AppColors.surfaceContainerHigh.withOpacity(0.7),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: AppColors.primary.withOpacity(0.3)),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.location_on, size: 14, color: AppColors.primary),
+                  const SizedBox(width: 4),
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 110),
+                    child: Text(
+                      cityName,
+                      style: GoogleFonts.inter(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.onSurface,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  const SizedBox(width: 2),
+                  const Icon(Icons.arrow_drop_down, size: 16, color: AppColors.onSurfaceVariant),
+                ],
+              ),
             ),
           ),
         ],
@@ -373,14 +498,8 @@ class _NextPrayerCard extends StatelessWidget {
         ? [('Fajr', now.add(const Duration(hours: 1)))]
         : prayerTimes;
 
-    final windows = buildPrayerWindows(safePrayerTimes, sunrise: sunrise);
-    final currentWindow = currentPrayerWindow(now, windows) ?? windows.first;
-
-    final currentPrayer = (currentWindow.name, currentWindow.start);
-    final nextBoundary = currentWindow.end;
-    final remaining = nextBoundary.difference(now);
-    final remainingHours = remaining.inHours;
-    final remainingMinutes = remaining.inMinutes.remainder(60);
+    final activeState = resolveActivePrayerState(now, safePrayerTimes, sunrise: sunrise);
+    final remaining = activeState.remaining;
 
     // Responsive font sizes
     final prayerNameSize = AppResponsive.scaleFont(context, min: 32, max: 48);
@@ -394,10 +513,14 @@ class _NextPrayerCard extends StatelessWidget {
       children: [
         Row(
           children: [
-            const Icon(Icons.wb_twilight, size: 18, color: AppColors.primary),
+            Icon(
+              activeState.isCurrent ? Icons.wb_twilight : Icons.schedule,
+              size: 18,
+              color: AppColors.primary,
+            ),
             const SizedBox(width: 8),
             Text(
-              'CURRENT PRAYER',
+              activeState.isCurrent ? 'CURRENT PRAYER' : 'NEXT PRAYER',
               style: GoogleFonts.inter(
                 fontSize: 13,
                 letterSpacing: 0.65,
@@ -409,7 +532,7 @@ class _NextPrayerCard extends StatelessWidget {
         ),
         const SizedBox(height: AppSpacing.sm),
         Text(
-          currentPrayer.$1,
+          activeState.name,
           style: GoogleFonts.inter(
             fontSize: prayerNameSize,
             height: 1.17,
@@ -420,9 +543,7 @@ class _NextPrayerCard extends StatelessWidget {
         ),
         const SizedBox(height: 4),
         Text(
-          '${DateFormat('h:mm a').format(currentPrayer.$2)} → '
-          '${DateFormat('h:mm a').format(nextBoundary)} • Ends in '
-          '${remainingHours}h ${remainingMinutes}m',
+          activeState.subtitle,
           style: GoogleFonts.inter(
             fontSize: timeSubtitleSize,
             color: AppColors.onSurfaceVariant,
@@ -664,16 +785,16 @@ class _TodayPrayersList extends StatelessWidget {
               final currentWindow = windows[index];
               final endTime = currentWindow.end;
 
-              final isCurrent = now.isAfter(prayer.$2) && now.isBefore(endTime);
-              final isPast = now.isAfter(endTime);
+              final isCurrent = !now.isBefore(prayer.$2) && now.isBefore(endTime);
+              final isPast = !now.isBefore(endTime);
 
               return Container(
                 margin: const EdgeInsets.only(right: AppSpacing.sm),
                 child: GlassSurface(
                   borderRadius: BorderRadius.circular(16),
                   child: Container(
-                    width: 140,
-                    padding: const EdgeInsets.all(AppSpacing.md),
+                    width: 145,
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
                     decoration: BoxDecoration(
                       border: Border.all(
                         color: isCurrent
@@ -685,6 +806,7 @@ class _TodayPrayersList extends StatelessWidget {
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
                           prayer.$1,
@@ -695,13 +817,15 @@ class _TodayPrayersList extends StatelessWidget {
                                 ? AppColors.onSurfaceVariant.withOpacity(0.5)
                                 : AppColors.onSurface,
                           ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 6),
                         Text(
                           '${DateFormat('h:mm a').format(prayer.$2)}\nuntil ${DateFormat('h:mm a').format(endTime)}',
                           style: GoogleFonts.inter(
                             fontSize: 12,
-                            height: 1.4,
+                            height: 1.3,
                             color: isPast
                                 ? AppColors.onSurfaceVariant.withOpacity(0.5)
                                 : AppColors.onSurfaceVariant,

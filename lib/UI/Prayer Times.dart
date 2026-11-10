@@ -1,13 +1,13 @@
 // prayer_times_screen.dart
 //
-// Muslim Daily – Prayer Times screen.
-// Responsive for phone, tablet, and desktop.
+// Muslim Daily – World-Class 3D Animated Prayer Times screen.
+// Responsive for phone, tablet, and desktop with precision waqt tracking.
 
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:intl/intl.dart';
+import 'package:intl/intl.dart' hide TextDirection;
 import 'package:islam/core/navigation/ui_actions.dart';
 import 'package:islam/core/storage/hive_keys.dart';
 import 'package:islam/core/storage/hive_service.dart';
@@ -20,20 +20,81 @@ import 'package:islam/features/prayer/domain/prayer_time_entry.dart';
 import 'package:islam/features/prayer/presentation/prayer_controller.dart';
 import 'package:islam/features/settings/presentation/settings_controller.dart';
 
-/// Icon shown for each of the five daily prayers.
+int monthlyCompletedPrayerCount(DateTime now) {
+  final box = HiveService.instance.prayerTrackerBox;
+  final prefix = '${now.year}-${now.month.toString().padLeft(2, '0')}';
+  var count = 0;
+  for (final key in box.keys) {
+    if (key is String && key.startsWith(prefix)) {
+      if (box.get(key) == true) {
+        count++;
+      }
+    }
+  }
+  return count;
+}
+
+int currentPrayerStreakDays(DateTime now) {
+  final box = HiveService.instance.prayerTrackerBox;
+  var streak = 0;
+  var checkDate = DateTime(now.year, now.month, now.day);
+
+  for (var i = 0; i < 365; i++) {
+    final dateStr =
+        '${checkDate.year}-${checkDate.month.toString().padLeft(2, '0')}-${checkDate.day.toString().padLeft(2, '0')}';
+    var completedAny = false;
+    for (final prayer in ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha']) {
+      if (box.get('${dateStr}_$prayer') == true) {
+        completedAny = true;
+        break;
+      }
+    }
+    if (completedAny) {
+      streak++;
+      checkDate = checkDate.subtract(const Duration(days: 1));
+    } else {
+      if (i == 0) {
+        checkDate = checkDate.subtract(const Duration(days: 1));
+        continue;
+      }
+      break;
+    }
+  }
+  return streak;
+}
+
+int missedPrayerCount(DateTime now) {
+  final box = HiveService.instance.prayerTrackerBox;
+  var missed = 0;
+  for (var i = 1; i <= 30; i++) {
+    final d = now.subtract(Duration(days: i));
+    final dateStr =
+        '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+    for (final prayer in ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha']) {
+      final key = '${dateStr}_$prayer';
+      final val = box.get(key);
+      if (val == null || val == false) {
+        missed++;
+      }
+    }
+  }
+  return missed;
+}
+
 IconData _iconForPrayer(String name) {
-  switch (name) {
-    case 'Fajr':
-      return Icons.nights_stay;
-    case 'Dhuhr':
-      return Icons.light_mode;
-    case 'Asr':
-      return Icons.wb_twilight;
-    case 'Maghrib':
-      return Icons.wb_sunny;
-    case 'Isha':
+  switch (name.toLowerCase()) {
+    case 'fajr':
+      return Icons.wb_twilight_rounded;
+    case 'dhuhr':
+      return Icons.wb_sunny_rounded;
+    case 'asr':
+      return Icons.wb_cloudy_rounded;
+    case 'maghrib':
+      return Icons.nights_stay_rounded;
+    case 'isha':
+      return Icons.bedtime_rounded;
     default:
-      return Icons.mode_night;
+      return Icons.access_time_filled_rounded;
   }
 }
 
@@ -135,6 +196,18 @@ class _PrayerTimesScreenState extends ConsumerState<PrayerTimesScreen> {
       backgroundColor: AppColors.background,
       body: Stack(
         children: [
+          // Ambient Glows
+          Positioned(
+            top: -80,
+            right: -60,
+            child: GlowOrb(color: AppColors.primary, radius: 260, opacity: 0.14),
+          ),
+          Positioned(
+            bottom: 120,
+            left: -80,
+            child: GlowOrb(color: AppColors.gold, radius: 220, opacity: 0.08),
+          ),
+
           Positioned.fill(
             child: SingleChildScrollView(
               padding: EdgeInsets.fromLTRB(
@@ -156,7 +229,7 @@ class _PrayerTimesScreenState extends ConsumerState<PrayerTimesScreen> {
                         monthlyCount: monthlyCount,
                         streakDays: streakDays,
                       ),
-                      const SizedBox(height: AppSpacing.lg),
+                      const SizedBox(height: 24),
                       _PrayerTimelineSection(
                         now: _now,
                         prayers: prayers,
@@ -170,16 +243,18 @@ class _PrayerTimesScreenState extends ConsumerState<PrayerTimesScreen> {
                             .read(settingsControllerProvider.notifier)
                             .setPrayerNotificationEnabled(name, value),
                       ),
-                      const SizedBox(height: AppSpacing.md),
+                      const SizedBox(height: 20),
                       _MissedPrayerSection(missedCount: missedCount),
-                      const SizedBox(height: AppSpacing.xl),
+                      const SizedBox(height: 32),
                     ],
                   ),
                 ),
               ),
             ),
           ),
+
           const Positioned(top: 0, left: 0, right: 0, child: _TopAppBar()),
+
           if (!isWide)
             const Positioned(
               bottom: 0,
@@ -193,9 +268,6 @@ class _PrayerTimesScreenState extends ConsumerState<PrayerTimesScreen> {
   }
 }
 
-// ---------------------------------------------------------------------------
-// Top app bar
-// ---------------------------------------------------------------------------
 class _TopAppBar extends StatelessWidget {
   const _TopAppBar();
 
@@ -213,7 +285,7 @@ class _TopAppBar extends StatelessWidget {
 }
 
 // ---------------------------------------------------------------------------
-// Date & summary section (headline + bento grid)
+// 3D Bento Date Summary Section
 // ---------------------------------------------------------------------------
 class _DateSummarySection extends StatelessWidget {
   final bool isWide;
@@ -234,73 +306,77 @@ class _DateSummarySection extends StatelessWidget {
   Widget build(BuildContext context) {
     final hijriLabel = dayData?.hijriLabel.isNotEmpty == true
         ? dayData!.hijriLabel
-        : null;
-
-    final headlineFontSize = AppResponsive.scaleFont(context, min: 28, max: 48);
-    // Bento card height – smaller on compact phones
-    final bentoHeight = AppResponsive.isSmall(context) ? 130.0 : 160.0;
+        : 'Loading Hijri date…';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const SizedBox(height: AppSpacing.md),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                'TODAY',
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 10,
+                  letterSpacing: 1.0,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.primary,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
         Text(
-          'TODAY',
-          style: GoogleFonts.inter(
-            fontSize: 13,
-            letterSpacing: 0.65,
-            fontWeight: FontWeight.w500,
-            color: AppColors.primary,
+          hijriLabel,
+          style: GoogleFonts.plusJakartaSans(
+            fontSize: AppResponsive.scaleFont(context, min: 26, max: 40),
+            letterSpacing: -1.0,
+            fontWeight: FontWeight.w900,
+            color: AppColors.onBackground,
           ),
         ),
-        const SizedBox(height: 4),
-        Text(
-          hijriLabel ?? 'Loading Hijri date…',
-          style: GoogleFonts.inter(
-            fontSize: headlineFontSize,
-            height: 1.17,
-            letterSpacing: -0.96,
-            fontWeight: FontWeight.bold,
-            color: AppColors.onSurface,
-          ),
-        ),
-        const SizedBox(height: 4),
+        const SizedBox(height: 2),
         Text(
           DateFormat('EEEE, MMMM d, yyyy').format(now),
-          style: GoogleFonts.inter(
-            fontSize: AppResponsive.scaleFont(context, min: 14, max: 18),
-            height: 1.55,
+          style: GoogleFonts.plusJakartaSans(
+            fontSize: AppResponsive.scaleFont(context, min: 13, max: 16),
             color: AppColors.onSurfaceVariant,
           ),
         ),
-        const SizedBox(height: AppSpacing.md),
+        const SizedBox(height: 18),
         if (isWide)
-          SizedBox(
-            height: bentoHeight,
+          IntrinsicHeight(
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Expanded(
                   child: _BentoCard(
-                    icon: Icons.task_alt,
+                    icon: Icons.check_circle_outline_rounded,
                     iconColor: AppColors.primary,
                     label: 'This Month',
                     value: '$monthlyCount',
-                    subtitle: 'Prayers Offered',
+                    subtitle: 'Prayers',
                   ),
                 ),
-                const SizedBox(width: AppSpacing.sm),
+                const SizedBox(width: 14),
                 Expanded(
                   child: _BentoCard(
-                    icon: Icons.local_fire_department,
-                    iconColor: AppColors.secondary,
+                    icon: Icons.local_fire_department_rounded,
+                    iconColor: AppColors.gold,
                     label: 'Streak',
-                    valueWidgets: _streakSpans(streakDays),
-                    subtitle: 'Keep it up!',
+                    value: '$streakDays Days',
+                    subtitle: 'Consistency',
                     glow: true,
                   ),
                 ),
-                const SizedBox(width: AppSpacing.sm),
+                const SizedBox(width: 14),
                 Expanded(
                   flex: 2,
                   child: _LocationCardContent(dayData: dayData),
@@ -312,39 +388,35 @@ class _DateSummarySection extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              SizedBox(
-                height: bentoHeight,
+              IntrinsicHeight(
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Expanded(
                       child: _BentoCard(
-                        icon: Icons.task_alt,
+                        icon: Icons.check_circle_outline_rounded,
                         iconColor: AppColors.primary,
                         label: 'This Month',
                         value: '$monthlyCount',
-                        subtitle: 'Prayers Offered',
+                        subtitle: 'Prayers',
                       ),
                     ),
-                    const SizedBox(width: AppSpacing.sm),
+                    const SizedBox(width: 12),
                     Expanded(
                       child: _BentoCard(
-                        icon: Icons.local_fire_department,
-                        iconColor: AppColors.secondary,
+                        icon: Icons.local_fire_department_rounded,
+                        iconColor: AppColors.gold,
                         label: 'Streak',
-                        valueWidgets: _streakSpans(streakDays),
-                        subtitle: 'Keep it up!',
+                        value: '$streakDays Days',
+                        subtitle: 'Keep going!',
                         glow: true,
                       ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: AppSpacing.sm),
-              ConstrainedBox(
-                constraints: const BoxConstraints(minHeight: 110),
-                child: _LocationCardContent(dayData: dayData),
-              ),
+              const SizedBox(height: 12),
+              _LocationCardContent(dayData: dayData),
             ],
           ),
       ],
@@ -352,29 +424,11 @@ class _DateSummarySection extends StatelessWidget {
   }
 }
 
-List<InlineSpan> _streakSpans(int days) {
-  return [
-    TextSpan(
-      text: '$days ',
-      style: GoogleFonts.inter(
-        fontSize: 32,
-        fontWeight: FontWeight.w600,
-        color: AppColors.onSurface,
-      ),
-    ),
-    TextSpan(
-      text: days == 1 ? 'Day' : 'Days',
-      style: GoogleFonts.inter(fontSize: 16, color: AppColors.onSurfaceVariant),
-    ),
-  ];
-}
-
 class _BentoCard extends StatelessWidget {
   final IconData icon;
   final Color iconColor;
   final String label;
-  final String? value;
-  final List<InlineSpan>? valueWidgets;
+  final String value;
   final String subtitle;
   final bool glow;
 
@@ -382,70 +436,77 @@ class _BentoCard extends StatelessWidget {
     required this.icon,
     required this.iconColor,
     required this.label,
-    this.value,
-    this.valueWidgets,
+    required this.value,
     required this.subtitle,
     this.glow = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    return GlassSurface(
-      borderRadius: BorderRadius.circular(12),
-      tint: AppColors.surface.withOpacity(glow ? 0.65 : 0.6),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Icon(icon, color: iconColor),
-                Flexible(
-                  child: Text(
-                    label,
-                    textAlign: TextAlign.right,
-                    overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.inter(
-                      fontSize: 13,
-                      letterSpacing: 0.65,
-                      color: AppColors.onSurfaceVariant,
-                    ),
-                  ),
+    return Card3D(
+      borderRadius: 20,
+      padding: const EdgeInsets.all(16),
+      glowColor: glow ? iconColor : null,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: iconColor.withOpacity(0.18),
                 ),
-              ],
-            ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (value != null)
-                  FittedBox(
-                    fit: BoxFit.scaleDown,
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      value!,
-                      style: GoogleFonts.inter(
-                        fontSize: 32,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.onSurface,
-                      ),
-                    ),
-                  ),
-                if (valueWidgets != null)
-                  RichText(text: TextSpan(children: valueWidgets)),
-                Text(
-                  subtitle,
-                  style: GoogleFonts.inter(
-                    fontSize: 13,
+                child: Icon(icon, color: iconColor, size: 20),
+              ),
+              Flexible(
+                child: Text(
+                  label,
+                  textAlign: TextAlign.right,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.5,
                     color: AppColors.onSurfaceVariant,
                   ),
                 ),
-              ],
-            ),
-          ],
-        ),
+              ),
+            ],
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  value,
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 26,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: -0.6,
+                    color: AppColors.onBackground,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                subtitle,
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500,
+                  color: AppColors.onSurfaceVariant,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -467,122 +528,93 @@ class _LocationCardContent extends StatelessWidget {
         ? DateFormat('h:mm a').format(dayData!.sunset)
         : '—';
 
-    return GlassSurface(
-      borderRadius: BorderRadius.circular(12),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(12),
-        onTap: () => showDistrictPicker(context),
-        child: Stack(
-          children: [
-            Positioned(
-              right: -40,
-              bottom: -40,
-              child: Container(
-                width: 160,
-                height: 160,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: AppColors.primary.withOpacity(0.2),
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return Card3D(
+      borderRadius: 20,
+      padding: const EdgeInsets.all(18),
+      onTap: () => showDistrictPicker(context),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
                 children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Expanded(
-                            child: Text(
-                              'LOCATION (জেলা)',
-                              style: GoogleFonts.inter(
-                                fontSize: 13,
-                                letterSpacing: 0.65,
-                                color: AppColors.onSurfaceVariant,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: AppColors.primary.withOpacity(0.15),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Row(
-                              children: [
-                                Text(
-                                  'Change',
-                                  style: GoogleFonts.inter(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w600,
-                                    color: AppColors.primary,
-                                  ),
-                                ),
-                                const SizedBox(width: 2),
-                                const Icon(Icons.edit_location_alt, size: 12, color: AppColors.primary),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 6),
-                      Row(
-                        children: [
-                          const Icon(
-                            Icons.location_on,
-                            color: AppColors.primary,
-                            size: 18,
-                          ),
-                          const SizedBox(width: 4),
-                          Expanded(
-                            child: Text(
-                              city,
-                              style: GoogleFonts.inter(
-                                fontSize: AppResponsive.scaleFont(
-                                  context,
-                                  min: 16,
-                                  max: 22,
-                                ),
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.onSurface,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
+                  const Icon(
+                    Icons.location_on_rounded,
+                    color: AppColors.primary,
+                    size: 16,
                   ),
+                  const SizedBox(width: 6),
                   Text(
-                    'Sunset: $sunsetLabel • Tap to switch district',
-                    style: GoogleFonts.inter(
-                      fontSize: 12,
-                      color: AppColors.onSurfaceVariant,
+                    'LOCATION (জেলা)',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 0.6,
+                      color: AppColors.primary,
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Row(
+                  children: [
+                    Text(
+                      'Change',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    const Icon(
+                      Icons.edit_location_alt_rounded,
+                      size: 12,
+                      color: AppColors.primary,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            city,
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 22,
+              fontWeight: FontWeight.w900,
+              letterSpacing: -0.5,
+              color: AppColors.onBackground,
             ),
-          ],
-        ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Sunset: $sunsetLabel • Tap to select from 64 BD Districts',
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 12,
+              color: AppColors.onSurfaceVariant,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
       ),
     );
   }
 }
 
 // ---------------------------------------------------------------------------
-// Prayer timeline section
+// 3D Prayer Timeline Section
 // ---------------------------------------------------------------------------
 class _PrayerTimelineSection extends StatelessWidget {
   final DateTime now;
@@ -641,13 +673,14 @@ class _PrayerTimelineSection extends StatelessWidget {
       children: [
         Text(
           'Prayer Times (ওয়াক্ত সময়সূচি)',
-          style: GoogleFonts.inter(
-            fontSize: AppResponsive.scaleFont(context, min: 18, max: 24),
-            fontWeight: FontWeight.w600,
-            color: AppColors.onSurface,
+          style: GoogleFonts.plusJakartaSans(
+            fontSize: 20,
+            fontWeight: FontWeight.w800,
+            letterSpacing: -0.4,
+            color: AppColors.onBackground,
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 14),
         for (var i = 0; i < prayers.length; i++) ...[
           () {
             final endTime = _getEndTime(i);
@@ -683,10 +716,10 @@ class _PrayerTimelineSection extends StatelessWidget {
               );
             }
           }(),
-          const SizedBox(height: AppSpacing.sm),
+          const SizedBox(height: 12),
           if (prayers[i].name == 'Fajr') ...[
             _SunriseRow(sunrise: sunrise),
-            const SizedBox(height: AppSpacing.sm),
+            const SizedBox(height: 12),
           ],
         ],
       ],
@@ -709,71 +742,90 @@ class _CompletedPrayerRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final nameFontSize = AppResponsive.scaleFont(context, min: 18, max: 24);
     final rangeText =
         '${DateFormat('h:mm a').format(entry.time)} – ${DateFormat('h:mm a').format(endTime)}';
 
-    return Opacity(
-      opacity: done ? 0.6 : 0.85,
-      child: GlassSurface(
-        borderRadius: BorderRadius.circular(12),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(12),
-          onTap: onToggleDone,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: Row(
-              children: [
-                Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: AppColors.surfaceContainer,
-                    border: Border.all(color: Colors.white10),
-                  ),
-                  child: Icon(
-                    _iconForPrayer(entry.name),
-                    color: AppColors.onSurfaceVariant,
-                    size: 20,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        entry.name,
-                        style: GoogleFonts.inter(
-                          fontSize: nameFontSize,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.onSurface,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      Text(
-                        rangeText,
-                        style: GoogleFonts.inter(
-                          fontSize: 13,
-                          color: AppColors.onSurfaceVariant,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Icon(
-                  done ? Icons.check_circle : Icons.radio_button_unchecked,
-                  color: done ? AppColors.primary : AppColors.tertiaryContainer,
-                ),
-              ],
-            ),
+    return ScaleButton(
+      onTap: onToggleDone,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(18),
+          color: AppColors.surfaceContainer.withOpacity(done ? 0.45 : 0.7),
+          border: Border.all(
+            color: Colors.white.withOpacity(0.06),
+            width: 1,
           ),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: AppColors.surfaceVariant.withOpacity(0.5),
+              ),
+              child: Icon(
+                _iconForPrayer(entry.name),
+                color: AppColors.onSurfaceVariant.withOpacity(0.6),
+                size: 20,
+              ),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    entry.name,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: done
+                          ? AppColors.onSurfaceVariant.withOpacity(0.5)
+                          : AppColors.onBackground,
+                      decoration: done ? TextDecoration.lineThrough : null,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    rangeText,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 12,
+                      color: AppColors.onSurfaceVariant.withOpacity(0.6),
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              width: 28,
+              height: 28,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: done ? AppColors.primary : Colors.transparent,
+                border: Border.all(
+                  color: done ? AppColors.primary : AppColors.onSurfaceVariant.withOpacity(0.4),
+                  width: 2,
+                ),
+              ),
+              child: done
+                  ? const Icon(
+                      Icons.check_rounded,
+                      size: 18,
+                      color: AppColors.onPrimary,
+                    )
+                  : null,
+            ),
+          ],
         ),
       ),
     );
@@ -786,55 +838,65 @@ class _SunriseRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Opacity(
-      opacity: 0.75,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 6,
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 44,
-              height: 44,
-              alignment: Alignment.center,
-              child: const Icon(
-                Icons.wb_sunny_outlined,
-                size: 20,
-                color: AppColors.secondary,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    'Sunrise (সূর্যোদয়)',
-                    style: GoogleFonts.inter(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.onSurfaceVariant,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  Text(
-                    '${DateFormat('h:mm a').format(sunrise)} • Fajr ends (ফজরের ওয়াক্ত শেষ)',
-                    style: GoogleFonts.inter(
-                      fontSize: 12,
-                      color: AppColors.onSurfaceVariant.withOpacity(0.8),
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ),
-            ),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(18),
+        gradient: LinearGradient(
+          colors: [
+            AppColors.gold.withOpacity(0.12),
+            AppColors.gold.withOpacity(0.04),
           ],
         ),
+        border: Border.all(
+          color: AppColors.gold.withOpacity(0.25),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: AppColors.gold.withOpacity(0.15),
+            ),
+            child: const Icon(
+              Icons.wb_sunny_rounded,
+              size: 22,
+              color: AppColors.gold,
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Sunrise (সূর্যোদয়)',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.gold,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                Text(
+                  '${DateFormat('h:mm a').format(sunrise)} • Fajr ends (ফজরের ওয়াক্ত শেষ)',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 12,
+                    color: AppColors.onSurfaceVariant,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -857,200 +919,135 @@ class _CurrentPrayerRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isWide = AppResponsive.isWide(context);
     final remaining =
         endTime.isAfter(now) ? endTime.difference(now) : Duration.zero;
-    final remainingH = remaining.inHours.toString().padLeft(2, '0');
-    final remainingM = remaining.inMinutes
-        .remainder(60)
-        .toString()
-        .padLeft(2, '0');
-    final remainingS = remaining.inSeconds
-        .remainder(60)
-        .toString()
-        .padLeft(2, '0');
-    final nameFontSize = AppResponsive.scaleFont(context, min: 18, max: 24);
     final rangeText =
         '${DateFormat('h:mm a').format(entry.time)} – ${DateFormat('h:mm a').format(endTime)}';
 
-    return Stack(
-      children: [
-        ClipRRect(
-          borderRadius: BorderRadius.circular(12),
-          child: Container(
+    return Card3D(
+      borderRadius: 22,
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+      gradient: const LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [Color(0xFF1E382A), Color(0xFF102218)],
+      ),
+      glowColor: AppColors.primary,
+      border: Border.all(
+        color: AppColors.primary.withOpacity(0.55),
+        width: 1.5,
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 48,
+            height: 48,
             decoration: BoxDecoration(
-              border: Border.all(color: AppColors.primary.withOpacity(0.5)),
+              shape: BoxShape.circle,
+              gradient: AppColors.primaryGradient,
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.primary.withOpacity(0.1),
-                  blurRadius: 30,
+                  color: AppColors.primary.withOpacity(0.4),
+                  blurRadius: 14,
                 ),
               ],
             ),
-            child: GlassSurface(
-              tint: AppColors.surface.withOpacity(0.6),
-              child: Stack(
-                children: [
-                  Positioned.fill(
-                    child: Container(
-                      color: AppColors.primary.withOpacity(0.05),
+            child: Icon(
+              _iconForPrayer(entry.name),
+              color: AppColors.onPrimary,
+              size: 24,
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  children: [
+                    Flexible(
+                      child: Text(
+                        entry.name,
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.onBackground,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
-                  ),
-                  Positioned(
-                    left: 0,
-                    top: 0,
-                    bottom: 0,
-                    child: Container(width: 4, color: AppColors.primary),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 44,
-                          height: 44,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: AppColors.primary.withOpacity(0.2),
-                            border: Border.all(
-                              color: AppColors.primary.withOpacity(0.3),
-                            ),
-                          ),
-                          child: Icon(
-                            _iconForPrayer(entry.name),
-                            color: AppColors.primary,
-                            size: 20,
-                          ),
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 3,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Text(
+                        'NOW',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 10,
+                          letterSpacing: 0.8,
+                          fontWeight: FontWeight.w900,
+                          color: AppColors.onPrimary,
                         ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Row(
-                                children: [
-                                  Flexible(
-                                    child: Text(
-                                      entry.name,
-                                      style: GoogleFonts.inter(
-                                        fontSize: nameFontSize,
-                                        fontWeight: FontWeight.w600,
-                                        color: AppColors.primary,
-                                      ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 6),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 6,
-                                      vertical: 2,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: AppColors.primary
-                                          .withOpacity(0.2),
-                                      borderRadius: BorderRadius.circular(
-                                        999,
-                                      ),
-                                    ),
-                                    child: Text(
-                                      'NOW',
-                                      style: GoogleFonts.inter(
-                                        fontSize: 10,
-                                        letterSpacing: 0.5,
-                                        fontWeight: FontWeight.bold,
-                                        color: AppColors.primary,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              Text(
-                                rangeText,
-                                style: GoogleFonts.inter(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w500,
-                                  color: AppColors.onSurface,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              if (!isWide) ...[
-                                const SizedBox(height: 2),
-                                Text(
-                                  'Ends in ${remaining.inHours > 0 ? '${remaining.inHours}h ' : ''}${remaining.inMinutes.remainder(60)}m',
-                                  style: GoogleFonts.inter(
-                                    fontSize: 11,
-                                    color: AppColors.primary,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ],
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            if (isWide) ...[
-                              Padding(
-                                padding: const EdgeInsets.only(
-                                  right: 12,
-                                ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.end,
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Text(
-                                      'Waqt ends in',
-                                      style: GoogleFonts.inter(
-                                        fontSize: 12,
-                                        color: AppColors.onSurfaceVariant,
-                                      ),
-                                    ),
-                                    Text(
-                                      '$remainingH:$remainingM:$remainingS',
-                                      style: GoogleFonts.inter(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.w600,
-                                        color: AppColors.onSurface,
-                                        fontFeatures: const [
-                                          FontFeature.tabularFigures(),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                            _PrayerToggle(
-                              value: notify,
-                              onChanged: onToggleNotify,
-                            ),
-                            const SizedBox(width: 6),
-                            Icon(
-                              notify
-                                  ? Icons.notifications_active
-                                  : Icons.notifications_off,
-                              color: AppColors.primary,
-                              size: 20,
-                            ),
-                          ],
-                        ),
-                      ],
+                      ),
                     ),
+                  ],
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  rangeText,
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.primary,
                   ),
-                ],
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'Ends in ${remaining.inHours > 0 ? '${remaining.inHours}h ' : ''}${remaining.inMinutes.remainder(60)}m',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.onSurfaceVariant,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          ScaleButton(
+            onTap: () => onToggleNotify(!notify),
+            child: Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: notify
+                    ? AppColors.primary.withOpacity(0.2)
+                    : AppColors.surfaceContainerHigh,
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: notify ? AppColors.primary.withOpacity(0.4) : Colors.white10,
+                ),
+              ),
+              child: Icon(
+                notify ? Icons.notifications_active_rounded : Icons.notifications_off_rounded,
+                color: notify ? AppColors.primary : AppColors.onSurfaceVariant,
+                size: 20,
               ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
@@ -1074,190 +1071,150 @@ class _UpcomingPrayerRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final nameFontSize = AppResponsive.scaleFont(context, min: 18, max: 24);
     final rangeText =
         '${DateFormat('h:mm a').format(entry.time)} – ${DateFormat('h:mm a').format(endTime)}';
     final remaining =
         entry.time.isAfter(now) ? entry.time.difference(now) : Duration.zero;
 
     return Container(
-      decoration: isNext
-          ? BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppColors.secondary.withOpacity(0.6)),
-              boxShadow: [
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(18),
+        color: isNext
+            ? const Color(0xFF14241C)
+            : AppColors.surfaceContainer.withOpacity(0.8),
+        border: Border.all(
+          color: isNext
+              ? AppColors.secondary.withOpacity(0.5)
+              : Colors.white.withOpacity(0.08),
+          width: isNext ? 1.5 : 1,
+        ),
+        boxShadow: isNext
+            ? [
                 BoxShadow(
-                  color: AppColors.secondary.withOpacity(0.08),
-                  blurRadius: 16,
+                  color: AppColors.secondary.withOpacity(0.12),
+                  blurRadius: 14,
                 ),
-              ],
-            )
-          : null,
-      child: GlassSurface(
-        borderRadius: BorderRadius.circular(12),
-        tint: isNext
-            ? AppColors.surfaceContainerHigh.withOpacity(0.7)
-            : const Color(0x992F3632),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          child: Row(
-            children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: isNext
-                      ? AppColors.secondary.withOpacity(0.2)
-                      : AppColors.surfaceContainer,
-                  border: Border.all(
-                    color: isNext
-                        ? AppColors.secondary.withOpacity(0.4)
-                        : Colors.white10,
-                  ),
-                ),
-                child: Icon(
-                  _iconForPrayer(entry.name),
-                  color: isNext
-                      ? AppColors.secondary
-                      : AppColors.onSurfaceVariant,
-                  size: 20,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
+              ]
+            : null,
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: isNext
+                  ? AppColors.secondary.withOpacity(0.18)
+                  : AppColors.surfaceVariant.withOpacity(0.5),
+            ),
+            child: Icon(
+              _iconForPrayer(entry.name),
+              color: isNext ? AppColors.secondary : AppColors.onSurfaceVariant,
+              size: 20,
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
                   children: [
-                    Row(
-                      children: [
-                        Flexible(
-                          child: Text(
-                            entry.name,
-                            style: GoogleFonts.inter(
-                              fontSize: nameFontSize,
-                              fontWeight: FontWeight.w600,
-                              color: isNext
-                                  ? AppColors.secondary
-                                  : AppColors.onSurface,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        if (isNext) ...[
-                          const SizedBox(width: 6),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 6,
-                              vertical: 2,
-                            ),
-                            decoration: BoxDecoration(
-                              color: AppColors.secondary.withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(999),
-                            ),
-                            child: Text(
-                              'NEXT WAQT',
-                              style: GoogleFonts.inter(
-                                fontSize: 9,
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: 0.5,
-                                color: AppColors.secondary,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                    Text(
-                      rangeText,
-                      style: GoogleFonts.inter(
-                        fontSize: 13,
-                        color: AppColors.onSurfaceVariant,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    if (isNext) ...[
-                      const SizedBox(height: 2),
-                      Text(
-                        'Starts in ${remaining.inHours > 0 ? '${remaining.inHours}h ' : ''}${remaining.inMinutes.remainder(60)}m',
-                        style: GoogleFonts.inter(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w500,
-                          color: AppColors.secondary,
+                    Flexible(
+                      child: Text(
+                        entry.name,
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: isNext ? AppColors.secondary : AppColors.onBackground,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
+                    ),
+                    if (isNext) ...[
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 7,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.secondary.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          'NEXT WAQT',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 9,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 0.6,
+                            color: AppColors.secondary,
+                          ),
+                        ),
+                      ),
                     ],
                   ],
                 ),
-              ),
-              const SizedBox(width: 8),
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _PrayerToggle(value: notify, onChanged: onToggleNotify),
-                  const SizedBox(width: 6),
-                  Icon(
-                    notify
-                        ? Icons.notifications_active
-                        : Icons.notifications_off,
-                    color: notify
-                        ? (isNext ? AppColors.secondary : AppColors.primary)
-                        : AppColors.onSurfaceVariant.withOpacity(0.5),
-                    size: 20,
+                const SizedBox(height: 2),
+                Text(
+                  rangeText,
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 12,
+                    color: AppColors.onSurfaceVariant,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                if (isNext) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    'Starts in ${remaining.inHours > 0 ? '${remaining.inHours}h ' : ''}${remaining.inMinutes.remainder(60)}m',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.secondary,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Pill-style on/off toggle.
-class _PrayerToggle extends StatelessWidget {
-  final bool value;
-  final ValueChanged<bool> onChanged;
-  const _PrayerToggle({required this.value, required this.onChanged});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () => onChanged(!value),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
-        width: 48,
-        height: 24,
-        padding: const EdgeInsets.all(2),
-        decoration: BoxDecoration(
-          color: value ? AppColors.primary : AppColors.surfaceVariant,
-          borderRadius: BorderRadius.circular(999),
-        ),
-        child: AnimatedAlign(
-          duration: const Duration(milliseconds: 300),
-          alignment: value ? Alignment.centerRight : Alignment.centerLeft,
-          child: Container(
-            width: 20,
-            height: 20,
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              shape: BoxShape.circle,
+              ],
             ),
           ),
-        ),
+          const SizedBox(width: 8),
+          ScaleButton(
+            onTap: () => onToggleNotify(!notify),
+            child: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: notify
+                    ? AppColors.primary.withOpacity(0.15)
+                    : Colors.transparent,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                notify
+                    ? Icons.notifications_active_rounded
+                    : Icons.notifications_off_rounded,
+                color: notify
+                    ? (isNext ? AppColors.secondary : AppColors.primary)
+                    : AppColors.onSurfaceVariant.withOpacity(0.5),
+                size: 20,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
 }
 
 // ---------------------------------------------------------------------------
-// Missed prayer (Qada) tracker section
+// 3D Missed Prayer (Qada) Tracker Section
 // ---------------------------------------------------------------------------
 class _MissedPrayerSection extends StatelessWidget {
   final int missedCount;
@@ -1265,135 +1222,83 @@ class _MissedPrayerSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isWide = AppResponsive.isWide(context);
-
-    final icon = Container(
-      width: 48,
-      height: 48,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: AppColors.tertiaryContainer.withOpacity(0.1),
-      ),
-      child: const Icon(Icons.history, color: AppColors.tertiaryContainer),
-    );
-
-    final textBlock = Expanded(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Qada (Missed Prayers)',
-            style: GoogleFonts.inter(
-              fontSize: AppResponsive.scaleFont(context, min: 16, max: 24),
-              fontWeight: FontWeight.w600,
-              color: AppColors.onSurface,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            'Keep track of your missed prayers and log them as you complete them.',
-            style: GoogleFonts.inter(
-              fontSize: 14,
-              color: AppColors.onSurfaceVariant,
-            ),
-          ),
-        ],
-      ),
-    );
-
-    final remainingBadge = Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.md,
-        vertical: 8,
-      ),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceContainer,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Column(
-        children: [
-          Text(
-            '$missedCount',
-            style: GoogleFonts.inter(
-              fontSize: 32,
-              fontWeight: FontWeight.w600,
-              color: AppColors.tertiaryContainer,
-            ),
-          ),
-          Text(
-            'Remaining',
-            style: GoogleFonts.inter(
-              fontSize: 13,
-              color: AppColors.onSurfaceVariant,
-            ),
-          ),
-        ],
-      ),
-    );
-
-    final viewLogButton = OutlinedButton(
-      onPressed: () => UiActions.openPrayerTracker(context),
-      style: OutlinedButton.styleFrom(
-        backgroundColor: AppColors.surfaceContainerHigh,
-        side: const BorderSide(color: Colors.white10),
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-      ),
+    return Card3D(
+      borderRadius: 22,
+      padding: const EdgeInsets.all(20),
       child: Row(
-        mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
-            'View Log',
-            style: GoogleFonts.inter(fontSize: 14, color: AppColors.onSurface),
+          Container(
+            width: 50,
+            height: 50,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: AppColors.tertiaryContainer.withOpacity(0.15),
+            ),
+            child: const Icon(
+              Icons.history_rounded,
+              color: AppColors.tertiaryContainer,
+              size: 26,
+            ),
           ),
-          const SizedBox(width: 8),
-          const Icon(Icons.arrow_forward, size: 14, color: AppColors.onSurface),
-        ],
-      ),
-    );
-
-    return GlassSurface(
-      borderRadius: BorderRadius.circular(12),
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        child: isWide
-            ? Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Qada (Missed Prayers)',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: -0.3,
+                    color: AppColors.onBackground,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  '$missedCount prayers unlogged in the past 30 days',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 12,
+                    color: AppColors.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          ScaleButton(
+            onTap: () => UiActions.openPrayerTracker(context),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(14),
+                color: AppColors.surfaceContainerHigh,
+                border: Border.all(
+                  color: Colors.white.withOpacity(0.1),
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Expanded(
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        icon,
-                        const SizedBox(width: AppSpacing.md),
-                        textBlock,
-                      ],
+                  Text(
+                    'Log',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.onBackground,
                     ),
                   ),
-                  const SizedBox(width: AppSpacing.sm),
-                  remainingBadge,
-                  const SizedBox(width: AppSpacing.sm),
-                  viewLogButton,
-                ],
-              )
-            : Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      icon,
-                      const SizedBox(width: AppSpacing.md),
-                      textBlock,
-                    ],
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [remainingBadge, viewLogButton],
+                  const SizedBox(width: 4),
+                  const Icon(
+                    Icons.arrow_forward_rounded,
+                    size: 14,
+                    color: AppColors.onBackground,
                   ),
                 ],
               ),
+            ),
+          ),
+        ],
       ),
     );
   }

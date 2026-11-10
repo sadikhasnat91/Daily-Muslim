@@ -1,24 +1,23 @@
 // home_screen.dart
 //
-// Muslim Daily – Home / Dashboard screen.
-// Responsive for phone, tablet, and desktop.
+// Muslim Daily – World-Class 3D Animated Home / Dashboard screen.
+// Responsive for phone, tablet, and desktop with Apple-grade polish.
 
 import 'dart:async';
 import 'dart:math' as math;
-import 'dart:ui' show ImageFilter;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart' hide TextDirection;
-import 'package:islam/features/settings/presentation/settings_controller.dart';
 import 'package:islam/core/navigation/ui_actions.dart';
 import 'package:islam/core/storage/hive_service.dart';
 import 'package:islam/core/time/timezone_helper.dart';
 import 'package:islam/core/ui/app_theme_tokens.dart';
+import 'package:islam/features/location/presentation/district_selection_sheet.dart';
 import 'package:islam/features/prayer/data/prayer_repository.dart';
 import 'package:islam/features/prayer/domain/prayer_day_data.dart';
 import 'package:islam/features/prayer/domain/prayer_time_entry.dart';
-import 'package:islam/features/location/presentation/district_selection_sheet.dart';
+import 'package:islam/features/settings/presentation/settings_controller.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -133,16 +132,16 @@ ActivePrayerState resolveActivePrayerState(
     }
   }
 
-  final firstTomorrow = windows.first.start.add(const Duration(days: 1));
-  final rem = firstTomorrow.difference(now);
+  final nextFajr = windows.first.start.add(const Duration(days: 1));
+  final rem = nextFajr.difference(now);
   final h = rem.inHours;
   final m = rem.inMinutes.remainder(60);
   return ActivePrayerState(
     isCurrent: false,
-    name: windows.first.name,
-    targetTime: firstTomorrow,
+    name: 'Fajr',
+    targetTime: nextFajr,
     subtitle:
-        'Starts tomorrow at ${DateFormat('h:mm a').format(firstTomorrow)} • In ${h}h ${m}m',
+        'Starts tomorrow at ${DateFormat('h:mm a').format(nextFajr)} • In ${h}h ${m}m',
     remaining: rem,
   );
 }
@@ -164,17 +163,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     super.initState();
     _ringController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 600),
+      duration: const Duration(milliseconds: 900),
     );
     _ringProgress = Tween<double>(
       begin: 0,
-      end: 0.66,
-    ).animate(CurvedAnimation(parent: _ringController, curve: Curves.easeOut));
-    Future.delayed(const Duration(milliseconds: 100), () {
+      end: 0.68,
+    ).animate(CurvedAnimation(parent: _ringController, curve: Curves.easeOutBack));
+    Future.delayed(const Duration(milliseconds: 150), () {
       if (mounted) _ringController.forward();
     });
     _loadPrayerTimes();
-    _clockTimer = Timer.periodic(const Duration(seconds: 30), (_) {
+    _clockTimer = Timer.periodic(const Duration(seconds: 15), (_) {
       if (mounted) {
         _refreshDailyIfNeeded();
         setState(() {});
@@ -186,9 +185,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     final settings = ref.read(settingsControllerProvider);
     final timezoneId = settings.timezone;
     final now = appNowForTimezone(timezoneId);
-    
+
     final data = await _prayerRepository.getPrayerDayData(now);
-    
+
     if (!mounted) return;
     setState(() {
       _prayerDayData = data;
@@ -257,14 +256,29 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       backgroundColor: AppColors.background,
       body: Stack(
         children: [
-          // Ambient background glow
-          const Positioned.fill(child: _AmbientBackground()),
+          // Ambient Glow Orbs for 3D depth
+          Positioned(
+            top: -100,
+            right: -80,
+            child: GlowOrb(color: AppColors.primary, radius: 280, opacity: 0.16),
+          ),
+          Positioned(
+            top: 300,
+            left: -120,
+            child: GlowOrb(color: AppColors.gold, radius: 240, opacity: 0.08),
+          ),
+          Positioned(
+            bottom: -60,
+            right: -60,
+            child: GlowOrb(color: AppColors.primary, radius: 220, opacity: 0.12),
+          ),
 
+          // Main Scrollable Content
           Positioned.fill(
             child: SingleChildScrollView(
               padding: EdgeInsets.fromLTRB(
                 AppResponsive.horizontalMargin(context),
-                96,
+                94,
                 AppResponsive.horizontalMargin(context),
                 AppResponsive.bottomScrollPad(context),
               ),
@@ -275,7 +289,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       _DateHeader(dayData: _prayerDayData, now: now),
-                      const SizedBox(height: AppSpacing.lg),
+                      const SizedBox(height: 20),
                       _NextPrayerCard(
                         isWide: isWide,
                         progress: _ringProgress,
@@ -283,15 +297,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                         prayerTimes: prayerTimes,
                         sunrise: _prayerDayData?.sunrise,
                       ),
-                      const SizedBox(height: AppSpacing.lg),
+                      const SizedBox(height: 24),
                       _TodayPrayersList(
                         prayerTimes: prayerTimes,
                         now: now,
                         sunrise: _prayerDayData?.sunrise,
                       ),
-                      const SizedBox(height: AppSpacing.lg),
+                      const SizedBox(height: 24),
                       const _QuickActionsGrid(),
-                      const SizedBox(height: AppSpacing.lg),
+                      const SizedBox(height: 24),
                       _DualBentoCards(isWide: isWide),
                     ],
                   ),
@@ -300,6 +314,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             ),
           ),
 
+          // Floating Top App Bar
           Positioned(
             top: 0,
             left: 0,
@@ -310,6 +325,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             ),
           ),
 
+          // Floating Bottom Navigation Dock (Mobile)
           if (!isWide)
             const Positioned(
               bottom: 0,
@@ -324,69 +340,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 }
 
 // ---------------------------------------------------------------------------
-// Ambient background glow blobs
-// ---------------------------------------------------------------------------
-class _AmbientBackground extends StatelessWidget {
-  const _AmbientBackground();
-
-  @override
-  Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
-    return IgnorePointer(
-      child: ClipRect(
-        child: Stack(
-          children: [
-            Positioned(
-              top: -size.height * 0.15,
-              right: -size.width * 0.25,
-              child: _GlowBlob(
-                diameter: size.width * 0.9,
-                color: AppColors.primary.withOpacity(0.10),
-                blurSigma: 120,
-              ),
-            ),
-            Positioned(
-              bottom: -size.height * 0.1,
-              left: -size.width * 0.25,
-              child: _GlowBlob(
-                diameter: size.width * 0.6,
-                color: AppColors.primary.withOpacity(0.05),
-                blurSigma: 100,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _GlowBlob extends StatelessWidget {
-  final double diameter;
-  final Color color;
-  final double blurSigma;
-
-  const _GlowBlob({
-    required this.diameter,
-    required this.color,
-    required this.blurSigma,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return ImageFiltered(
-      imageFilter: ImageFilter.blur(sigmaX: blurSigma, sigmaY: blurSigma),
-      child: Container(
-        width: diameter,
-        height: diameter,
-        decoration: BoxDecoration(shape: BoxShape.circle, color: color),
-      ),
-    );
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Date header
+// 3D Date Header with Interactive Location Pill
 // ---------------------------------------------------------------------------
 class _DateHeader extends StatelessWidget {
   const _DateHeader({required this.dayData, required this.now});
@@ -398,84 +352,117 @@ class _DateHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final cityName = dayData?.city.isNotEmpty == true ? dayData!.city : 'Dhaka';
 
-    return Padding(
-      padding: const EdgeInsets.only(top: AppSpacing.md),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  dayData?.hijriLabel.isNotEmpty == true
-                      ? dayData!.hijriLabel
-                      : 'Hijri date loading...',
-                  style: GoogleFonts.inter(
-                    fontSize: 16,
-                    color: AppColors.onSurfaceVariant,
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const Icon(
+                    Icons.nightlight_round,
+                    size: 14,
+                    color: AppColors.gold,
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                  const SizedBox(width: 6),
+                  Flexible(
+                    child: Text(
+                      dayData?.hijriLabel.isNotEmpty == true
+                          ? dayData!.hijriLabel
+                          : 'Hijri date loading...',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.2,
+                        color: AppColors.onBackground,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 3),
+              Text(
+                dayData?.gregorianLabel.isNotEmpty == true
+                    ? dayData!.gregorianLabel
+                    : DateFormat('EEEE, d MMMM yyyy').format(now),
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                  color: AppColors.onSurfaceVariant,
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  dayData?.gregorianLabel.isNotEmpty == true
-                      ? dayData!.gregorianLabel
-                      : DateFormat('EEEE, MMMM d, yyyy').format(now),
-                  style: GoogleFonts.inter(
-                    fontSize: 13,
-                    color: AppColors.onSurfaceVariant.withOpacity(0.7),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(width: 8),
+        ScaleButton(
+          onTap: () => showDistrictPicker(context),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+            decoration: BoxDecoration(
+              color: AppColors.surfaceContainer.withOpacity(0.85),
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(
+                color: AppColors.primary.withOpacity(0.35),
+                width: 1,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.primary.withOpacity(0.12),
+                  blurRadius: 12,
+                ),
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.3),
+                  offset: const Offset(0, 4),
+                  blurRadius: 10,
+                ),
+              ],
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.location_on_rounded,
+                  size: 14,
+                  color: AppColors.primary,
+                ),
+                const SizedBox(width: 5),
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 120),
+                  child: Text(
+                    cityName,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.onBackground,
+                    ),
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(width: 3),
+                const Icon(
+                  Icons.keyboard_arrow_down_rounded,
+                  size: 16,
+                  color: AppColors.onSurfaceVariant,
                 ),
               ],
             ),
           ),
-          const SizedBox(width: 8),
-          InkWell(
-            onTap: () => showDistrictPicker(context),
-            borderRadius: BorderRadius.circular(20),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              decoration: BoxDecoration(
-                color: AppColors.surfaceContainerHigh.withOpacity(0.7),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: AppColors.primary.withOpacity(0.3)),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.location_on, size: 14, color: AppColors.primary),
-                  const SizedBox(width: 4),
-                  ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 110),
-                    child: Text(
-                      cityName,
-                      style: GoogleFonts.inter(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.onSurface,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  const SizedBox(width: 2),
-                  const Icon(Icons.arrow_drop_down, size: 16, color: AppColors.onSurfaceVariant),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
 
 // ---------------------------------------------------------------------------
-// Next prayer card with circular countdown ring
+// 3D Hero Next Prayer Card with Animated Dual-Ring Timer
 // ---------------------------------------------------------------------------
 class _NextPrayerCard extends StatelessWidget {
   final bool isWide;
@@ -500,54 +487,92 @@ class _NextPrayerCard extends StatelessWidget {
 
     final activeState = resolveActivePrayerState(now, safePrayerTimes, sunrise: sunrise);
     final remaining = activeState.remaining;
-
-    // Responsive font sizes
-    final prayerNameSize = AppResponsive.scaleFont(context, min: 32, max: 48);
-    final timeSubtitleSize = AppResponsive.scaleFont(context, min: 14, max: 18);
-    // Ring size: smaller on compact phones
-    final ringSize = AppResponsive.isSmall(context) ? 120.0 : 160.0;
+    // Responsive ring: on small phones shrink to fit alongside the info column
+    final screenWidth = MediaQuery.of(context).size.width;
+    final ringSize = isWide
+        ? 160.0
+        : (screenWidth < 380 ? 108.0 : (AppResponsive.isSmall(context) ? 118.0 : 140.0));
 
     final infoColumn = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        Row(
-          children: [
-            Icon(
-              activeState.isCurrent ? Icons.wb_twilight : Icons.schedule,
-              size: 18,
-              color: AppColors.primary,
+        // 3D Status Pill (Current vs Next Waqt)
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+          decoration: BoxDecoration(
+            color: activeState.isCurrent
+                ? AppColors.primary.withOpacity(0.18)
+                : AppColors.gold.withOpacity(0.16),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: activeState.isCurrent
+                  ? AppColors.primary.withOpacity(0.4)
+                  : AppColors.gold.withOpacity(0.35),
+              width: 1,
             ),
-            const SizedBox(width: 8),
-            Text(
-              activeState.isCurrent ? 'CURRENT PRAYER' : 'NEXT PRAYER',
-              style: GoogleFonts.inter(
-                fontSize: 13,
-                letterSpacing: 0.65,
-                fontWeight: FontWeight.w500,
-                color: AppColors.primary,
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 7,
+                height: 7,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: activeState.isCurrent ? AppColors.primary : AppColors.gold,
+                  boxShadow: [
+                    BoxShadow(
+                      color: (activeState.isCurrent ? AppColors.primary : AppColors.gold)
+                          .withOpacity(0.8),
+                      blurRadius: 6,
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        Text(
-          activeState.name,
-          style: GoogleFonts.inter(
-            fontSize: prayerNameSize,
-            height: 1.17,
-            letterSpacing: -0.96,
-            fontWeight: FontWeight.bold,
-            color: AppColors.onSurface,
+              const SizedBox(width: 7),
+              Text(
+                activeState.isCurrent ? 'CURRENT WAQT' : 'NEXT WAQT',
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 11,
+                  letterSpacing: 0.8,
+                  fontWeight: FontWeight.w800,
+                  color: activeState.isCurrent ? AppColors.primary : AppColors.gold,
+                ),
+              ),
+            ],
           ),
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: 12),
+
+        // Large Prayer Name with subtle gradient
+        ShaderMask(
+          shaderCallback: (bounds) => const LinearGradient(
+            colors: [Color(0xFFFFFFFF), Color(0xFFDDE7E1)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ).createShader(bounds),
+          child: Text(
+            activeState.name,
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: AppResponsive.scaleFont(context, min: 32, max: 46),
+              height: 1.1,
+              letterSpacing: -1.2,
+              fontWeight: FontWeight.w900,
+              color: Colors.white,
+            ),
+          ),
+        ),
+        const SizedBox(height: 6),
         Text(
           activeState.subtitle,
-          style: GoogleFonts.inter(
-            fontSize: timeSubtitleSize,
+          style: GoogleFonts.plusJakartaSans(
+            fontSize: 13,
+            fontWeight: FontWeight.w500,
             color: AppColors.onSurfaceVariant,
           ),
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
         ),
       ],
     );
@@ -559,16 +584,36 @@ class _NextPrayerCard extends StatelessWidget {
         animation: progress,
         builder: (context, _) {
           return CustomPaint(
-            painter: _ProgressRingPainter(progress: progress.value),
+            painter: _ModernProgressRingPainter(
+              progress: progress.value,
+              isCurrent: activeState.isCurrent,
+            ),
             child: Center(
-              child: Text(
-                '${remaining.inHours.toString().padLeft(2, '0')}:'
-                '${remaining.inMinutes.remainder(60).toString().padLeft(2, '0')}',
-                style: GoogleFonts.inter(
-                  fontSize: AppResponsive.scaleFont(context, min: 22, max: 32),
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.onSurface,
-                ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      '${remaining.inHours.toString().padLeft(2, '0')}:${remaining.inMinutes.remainder(60).toString().padLeft(2, '0')}',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: AppResponsive.scaleFont(context, min: 20, max: 32),
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.5,
+                        color: AppColors.onBackground,
+                      ),
+                    ),
+                  ),
+                  Text(
+                    'Remaining',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 0.5,
+                      color: AppColors.onSurfaceVariant,
+                    ),
+                  ),
+                ],
               ),
             ),
           );
@@ -576,72 +621,70 @@ class _NextPrayerCard extends StatelessWidget {
       ),
     );
 
-    return GlassSurface(
-      borderRadius: BorderRadius.circular(24),
-      child: Stack(
-        children: [
-          // Decorative gradient
-          Positioned.fill(
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topRight,
-                  end: Alignment.bottomLeft,
-                  colors: [
-                    AppColors.primary.withOpacity(0.10),
-                    Colors.transparent,
-                  ],
-                ),
-              ),
-            ),
-          ),
-          Padding(
-            padding: EdgeInsets.all(isWide ? AppSpacing.lg : AppSpacing.md),
-            child: isWide
-                ? Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(child: infoColumn),
-                      ring,
-                    ],
-                  )
-                : Column(
-                    children: [
-                      Align(alignment: Alignment.centerLeft, child: infoColumn),
-                      const SizedBox(height: AppSpacing.md),
-                      ring,
-                    ],
-                  ),
-          ),
-        ],
+    return Card3D(
+      borderRadius: 26,
+      padding: EdgeInsets.all(isWide ? 28 : 22),
+      gradient: const LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [Color(0xFF192C23), Color(0xFF0F1A14)],
       ),
+      glowColor: activeState.isCurrent ? AppColors.primary : AppColors.gold,
+      child: isWide
+          ? Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(child: infoColumn),
+                ring,
+              ],
+            )
+          : Row(
+              children: [
+                Expanded(child: infoColumn),
+                const SizedBox(width: 12),
+                ring,
+              ],
+            ),
     );
   }
 }
 
-/// Paints the circular countdown ring.
-class _ProgressRingPainter extends CustomPainter {
-  final double progress; // 0.0 – 1.0
+class _ModernProgressRingPainter extends CustomPainter {
+  final double progress;
+  final bool isCurrent;
 
-  _ProgressRingPainter({required this.progress});
+  _ModernProgressRingPainter({
+    required this.progress,
+    required this.isCurrent,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
-    final radius = (size.shortestSide - 6) / 2;
+    final radius = (size.shortestSide - 10) / 2;
 
+    // Track
     final trackPaint = Paint()
-      ..color = Colors.white.withOpacity(0.1)
+      ..color = Colors.white.withOpacity(0.08)
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 6;
-
-    final progressPaint = Paint()
-      ..color = AppColors.primary
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 6
-      ..strokeCap = StrokeCap.round;
+      ..strokeWidth = 7;
 
     canvas.drawCircle(center, radius, trackPaint);
+
+    // Glowing Progress Arc
+    final activeColor = isCurrent ? AppColors.primary : AppColors.gold;
+    final progressPaint = Paint()
+      ..shader = SweepGradient(
+        colors: [
+          activeColor.withOpacity(0.2),
+          activeColor,
+        ],
+        stops: const [0.0, 1.0],
+        transform: const GradientRotation(-math.pi / 2),
+      ).createShader(Rect.fromCircle(center: center, radius: radius))
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 7
+      ..strokeCap = StrokeCap.round;
 
     const startAngle = -math.pi / 2;
     final sweepAngle = 2 * math.pi * progress;
@@ -655,31 +698,40 @@ class _ProgressRingPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _ProgressRingPainter oldDelegate) =>
-      oldDelegate.progress != progress;
+  bool shouldRepaint(covariant _ModernProgressRingPainter oldDelegate) =>
+      oldDelegate.progress != progress || oldDelegate.isCurrent != isCurrent;
 }
 
 // ---------------------------------------------------------------------------
-// Quick actions grid (5 icon buttons)
+// 3D Quick Actions Grid (Isometric Animated Tiles)
 // ---------------------------------------------------------------------------
 class _QuickActionsGrid extends StatelessWidget {
   const _QuickActionsGrid();
 
   static const _actions = [
-    (icon: Icons.schedule, label: 'Prayers'),
-    (icon: Icons.explore, label: 'Qibla'),
-    (icon: Icons.fiber_manual_record, label: 'Tasbih'),
-    (icon: Icons.auto_awesome, label: 'Duas'),
-    (icon: Icons.calendar_month, label: 'Calendar'),
+    (icon: Icons.access_time_filled_rounded, label: 'Prayers', color: Color(0xFF00E599)),
+    (icon: Icons.explore_rounded, label: 'Qibla', color: Color(0xFF38BDF8)),
+    (icon: Icons.fingerprint_rounded, label: 'Tasbih', color: Color(0xFFFBBF24)),
+    (icon: Icons.auto_awesome_rounded, label: 'Duas', color: Color(0xFFA78BFA)),
+    (icon: Icons.calendar_month_rounded, label: 'Calendar', color: Color(0xFFF472B6)),
   ];
 
   @override
   Widget build(BuildContext context) {
+    final isSmall = AppResponsive.isSmall(context);
+    final hPad = isSmall ? 2.0 : 4.0;
     return Row(
       children: [
         for (final action in _actions)
           Expanded(
-            child: _QuickActionButton(icon: action.icon, label: action.label),
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: hPad),
+              child: _QuickActionButton(
+                icon: action.icon,
+                label: action.label,
+                accentColor: action.color,
+              ),
+            ),
           ),
       ],
     );
@@ -689,55 +741,86 @@ class _QuickActionsGrid extends StatelessWidget {
 class _QuickActionButton extends StatelessWidget {
   final IconData icon;
   final String label;
+  final Color accentColor;
 
-  const _QuickActionButton({required this.icon, required this.label});
+  const _QuickActionButton({
+    required this.icon,
+    required this.label,
+    required this.accentColor,
+  });
 
   @override
   Widget build(BuildContext context) {
     final isSmall = AppResponsive.isSmall(context);
-    final iconBoxSize = isSmall ? 40.0 : 48.0;
-
-    return Material(
-      color: Colors.transparent,
-      borderRadius: BorderRadius.circular(12),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(12),
-        onTap: () => UiActions.openByLabel(context, label),
-        hoverColor: Colors.white.withOpacity(0.05),
-        child: Padding(
-          padding: EdgeInsets.symmetric(
-            vertical: AppSpacing.sm,
-            horizontal: isSmall ? 2 : 4,
+    final vPad = isSmall ? 10.0 : 14.0;
+    final iconBoxPad = isSmall ? 7.0 : 10.0;
+    final iconSize = isSmall ? 18.0 : 22.0;
+    return ScaleButton(
+      onTap: () => UiActions.openByLabel(context, label),
+      child: Container(
+        padding: EdgeInsets.symmetric(vertical: vPad),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20),
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFF16231C), Color(0xFF0F1713)],
           ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              GlassSurface(
-                borderRadius: BorderRadius.circular(999),
-                child: SizedBox(
-                  width: iconBoxSize,
-                  height: iconBoxSize,
-                  child: Icon(
-                    icon,
-                    size: isSmall ? 20 : 24,
-                    color: AppColors.primary,
+          border: Border.all(
+            color: Colors.white.withOpacity(0.08),
+            width: 1,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.35),
+              offset: const Offset(0, 6),
+              blurRadius: 14,
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: EdgeInsets.all(iconBoxPad),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    accentColor.withOpacity(0.25),
+                    accentColor.withOpacity(0.05),
+                  ],
+                ),
+                border: Border.all(
+                  color: accentColor.withOpacity(0.3),
+                  width: 1,
+                ),
+              ),
+              child: Icon(
+                icon,
+                size: iconSize,
+                color: accentColor,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 2),
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  label,
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.onSurface,
                   ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
-              const SizedBox(height: 4),
-              Text(
-                label,
-                textAlign: TextAlign.center,
-                style: GoogleFonts.inter(
-                  fontSize: isSmall ? 10 : 13,
-                  letterSpacing: 0.65,
-                  color: AppColors.onSurfaceVariant,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -745,7 +828,7 @@ class _QuickActionButton extends StatelessWidget {
 }
 
 // ---------------------------------------------------------------------------
-// Today's prayers list (horizontal scroll)
+// 3D Today's Prayers List (Horizontal Scroll with Waqt Ranges)
 // ---------------------------------------------------------------------------
 class _TodayPrayersList extends StatelessWidget {
   final List<(String, DateTime)> prayerTimes;
@@ -765,19 +848,35 @@ class _TodayPrayersList extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
-          child: Text(
-            "Today's Prayers (Waqt)",
-            style: GoogleFonts.inter(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: AppColors.onSurface,
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              "Today's Prayers (Waqt)",
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 17,
+                fontWeight: FontWeight.w800,
+                letterSpacing: -0.3,
+                color: AppColors.onBackground,
+              ),
             ),
-          ),
+            ScaleButton(
+              onTap: () => UiActions.openByLabel(context, 'Prayers'),
+              child: Text(
+                'Full Schedule →',
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.primary,
+                ),
+              ),
+            ),
+          ],
         ),
+        const SizedBox(height: 12),
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
+          clipBehavior: Clip.none,
           child: Row(
             children: List.generate(prayerTimes.length, (index) {
               final prayer = prayerTimes[index];
@@ -788,47 +887,100 @@ class _TodayPrayersList extends StatelessWidget {
               final isCurrent = !now.isBefore(prayer.$2) && now.isBefore(endTime);
               final isPast = !now.isBefore(endTime);
 
-              return Container(
-                margin: const EdgeInsets.only(right: AppSpacing.sm),
-                child: GlassSurface(
-                  borderRadius: BorderRadius.circular(16),
+              return Padding(
+                padding: const EdgeInsets.only(right: 12),
+                child: ScaleButton(
+                  onTap: () => UiActions.openByLabel(context, 'Prayers'),
                   child: Container(
-                    width: 145,
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                    width: 154,
+                    padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(20),
+                      gradient: isCurrent
+                          ? const LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [Color(0xFF1E3A2B), Color(0xFF112219)],
+                            )
+                          : const LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [Color(0xFF14201A), Color(0xFF0E1612)],
+                            ),
                       border: Border.all(
                         color: isCurrent
                             ? AppColors.primary.withOpacity(0.5)
-                            : Colors.transparent,
-                        width: 1.5,
+                            : Colors.white.withOpacity(0.08),
+                        width: isCurrent ? 1.5 : 1,
                       ),
-                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: isCurrent
+                          ? [
+                              BoxShadow(
+                                color: AppColors.primary.withOpacity(0.2),
+                                blurRadius: 16,
+                                offset: const Offset(0, 4),
+                              ),
+                            ]
+                          : [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.35),
+                                offset: const Offset(0, 6),
+                                blurRadius: 12,
+                              ),
+                            ],
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text(
-                          prayer.$1,
-                          style: GoogleFonts.inter(
-                            fontSize: 15,
-                            fontWeight: FontWeight.bold,
-                            color: isPast
-                                ? AppColors.onSurfaceVariant.withOpacity(0.5)
-                                : AppColors.onSurface,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Expanded(
+                              child: Text(
+                                prayer.$1,
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w800,
+                                  color: isCurrent
+                                      ? AppColors.primary
+                                      : isPast
+                                          ? AppColors.onSurfaceVariant.withOpacity(0.5)
+                                          : AppColors.onBackground,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            if (isCurrent)
+                              Container(
+                                width: 8,
+                                height: 8,
+                                decoration: const BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: AppColors.primary,
+                                ),
+                              ),
+                          ],
                         ),
-                        const SizedBox(height: 6),
+                        const SizedBox(height: 8),
                         Text(
-                          '${DateFormat('h:mm a').format(prayer.$2)}\nuntil ${DateFormat('h:mm a').format(endTime)}',
-                          style: GoogleFonts.inter(
-                            fontSize: 12,
-                            height: 1.3,
+                          DateFormat('h:mm a').format(prayer.$2),
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: -0.3,
                             color: isPast
                                 ? AppColors.onSurfaceVariant.withOpacity(0.5)
-                                : AppColors.onSurfaceVariant,
+                                : AppColors.onBackground,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          'until ${DateFormat('h:mm a').format(endTime)}',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w500,
+                            color: AppColors.onSurfaceVariant.withOpacity(0.7),
                           ),
                         ),
                       ],
@@ -845,7 +997,7 @@ class _TodayPrayersList extends StatelessWidget {
 }
 
 // ---------------------------------------------------------------------------
-// Dual bento cards: Daily Ayah + Continue Reading
+// 3D Dual Bento Cards (Daily Ayah + Continue Reading)
 // ---------------------------------------------------------------------------
 class _DualBentoCards extends StatelessWidget {
   final bool isWide;
@@ -857,19 +1009,19 @@ class _DualBentoCards extends StatelessWidget {
     const continueReading = _ContinueReadingCard();
 
     if (isWide) {
-      return Row(
+      return const Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Expanded(child: ayah),
-          const SizedBox(width: AppSpacing.md),
-          const Expanded(child: continueReading),
+          Expanded(child: ayah),
+          SizedBox(width: 20),
+          Expanded(child: continueReading),
         ],
       );
     }
     return const Column(
       children: [
         ayah,
-        SizedBox(height: AppSpacing.md),
+        SizedBox(height: 20),
         continueReading,
       ],
     );
@@ -881,78 +1033,99 @@ class _DailyAyahCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final arabicFontSize = AppResponsive.scaleFont(context, min: 26, max: 36);
+    final arabicFontSize = AppResponsive.scaleFont(context, min: 24, max: 32);
 
-    return GlassSurface(
-      borderRadius: BorderRadius.circular(24),
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Daily Ayah',
-                  style: GoogleFonts.inter(
-                    fontSize: AppResponsive.scaleFont(
-                      context,
-                      min: 18,
-                      max: 24,
-                    ),
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.onSurface,
+    return Card3D(
+      borderRadius: 24,
+      padding: const EdgeInsets.all(22),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: AppColors.gold.withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: AppColors.gold.withOpacity(0.3),
+                    width: 1,
                   ),
                 ),
-                Row(
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    _SmallIconButton(icon: Icons.bookmark_border),
-                    const SizedBox(width: 4),
-                    _SmallIconButton(icon: Icons.share),
+                    const Icon(
+                      Icons.auto_awesome_rounded,
+                      size: 13,
+                      color: AppColors.gold,
+                    ),
+                    const SizedBox(width: 5),
+                    Text(
+                      'DAILY AYAH',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0.8,
+                        color: AppColors.gold,
+                      ),
+                    ),
                   ],
                 ),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.md),
-            Directionality(
-              textDirection: TextDirection.rtl,
-              child: Text(
-                'وَإِذَا سَأَلَكَ عِبَادِي عَنِّي فَإِنِّي قَرِيبٌ',
-                textAlign: TextAlign.right,
-                style: GoogleFonts.libreCaslonText(
-                  fontSize: arabicFontSize,
-                  height: 1.6,
-                  color: AppColors.onSurface,
-                ),
+              ),
+              Row(
+                children: [
+                  _SmallIconButton(icon: Icons.bookmark_border_rounded),
+                  const SizedBox(width: 6),
+                  _SmallIconButton(icon: Icons.share_rounded),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 18),
+          Directionality(
+            textDirection: TextDirection.rtl,
+            child: Text(
+              'وَإِذَا سَأَلَكَ عِبَادِي عَنِّي فَإِنِّي قَرِيبٌ',
+              textAlign: TextAlign.right,
+              style: GoogleFonts.amiri(
+                fontSize: arabicFontSize,
+                height: 1.8,
+                fontWeight: FontWeight.bold,
+                color: AppColors.onBackground,
               ),
             ),
-            const SizedBox(height: AppSpacing.sm),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.only(top: AppSpacing.sm),
-              decoration: const BoxDecoration(
-                border: Border(top: BorderSide(color: Colors.white10)),
-              ),
-              child: Text(
-                '"And when My servants ask you concerning Me, indeed I am near."',
-                style: GoogleFonts.inter(
-                  fontSize: 16,
-                  color: AppColors.onSurfaceVariant,
-                ),
+          ),
+          const SizedBox(height: 14),
+          Container(
+            padding: const EdgeInsets.only(top: 12),
+            decoration: BoxDecoration(
+              border: Border(
+                top: BorderSide(color: Colors.white.withOpacity(0.08)),
               ),
             ),
-            const SizedBox(height: 4),
-            Text(
-              'Al-Baqarah 2:186',
-              style: GoogleFonts.inter(
-                fontSize: 13,
-                letterSpacing: 0.65,
-                color: AppColors.primary,
+            child: Text(
+              '"And when My servants ask you concerning Me, indeed I am near."',
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 14,
+                fontStyle: FontStyle.italic,
+                height: 1.5,
+                color: AppColors.onSurfaceVariant,
               ),
             ),
-          ],
-        ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Surah Al-Baqarah 2:186',
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: AppColors.primary,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -964,33 +1137,36 @@ class _SmallIconButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      shape: const CircleBorder(),
-      child: InkWell(
-        customBorder: const CircleBorder(),
-        onTap: () {
-          if (icon == Icons.bookmark_border) {
-            UiActions.bookmarkAyah(
-              context,
-              key: 'daily_ayah',
-              title: 'Al-Baqarah',
-              arabic: 'وَإِذَا سَأَلَكَ عِبَادِي عَنِّي فَإِنِّي قَرِيبٌ',
-              surahId: 2,
-              ayahNumber: 186,
-            );
-            return;
-          }
-          UiActions.shareText(
+    return ScaleButton(
+      onTap: () {
+        if (icon == Icons.bookmark_border_rounded) {
+          UiActions.bookmarkAyah(
             context,
-            'And when My servants ask you concerning Me, indeed I am near. '
-            '(Al-Baqarah 2:186)',
+            key: 'daily_ayah',
+            title: 'Al-Baqarah',
+            arabic: 'وَإِذَا سَأَلَكَ عِبَادِي عَنِّي فَإِنِّي قَرِيبٌ',
+            surahId: 2,
+            ayahNumber: 186,
           );
-        },
-        child: Padding(
-          padding: const EdgeInsets.all(4),
-          child: Icon(icon, size: 20, color: AppColors.onSurfaceVariant),
+          return;
+        }
+        UiActions.shareText(
+          context,
+          'And when My servants ask you concerning Me, indeed I am near. '
+          '(Al-Baqarah 2:186)',
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: AppColors.surfaceContainerHigh.withOpacity(0.8),
+          shape: BoxShape.circle,
+          border: Border.all(
+            color: Colors.white.withOpacity(0.08),
+            width: 1,
+          ),
         ),
+        child: Icon(icon, size: 16, color: AppColors.onSurfaceVariant),
       ),
     );
   }
@@ -1008,93 +1184,105 @@ class _ContinueReadingCard extends StatelessWidget {
     final displayVerse = (recent?['ayahNumber'] as int?) ?? 1;
     final progress = recentVerses > 0 ? (displayVerse / recentVerses) : 0.15;
 
-    return Material(
-      color: Colors.transparent,
-      borderRadius: BorderRadius.circular(24),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(24),
-        onTap: () => UiActions.openQuranReader(context, surahId: recentId),
-        hoverColor: Colors.white.withOpacity(0.05),
-        child: GlassSurface(
-          borderRadius: BorderRadius.circular(24),
-          child: Stack(
+    return Card3D(
+      borderRadius: 24,
+      padding: const EdgeInsets.all(22),
+      onTap: () => UiActions.openQuranReader(context, surahId: recentId),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              // Decorative background ornament
-              Positioned(
-                top: -16,
-                right: -16,
-                child: Icon(
-                  Icons.menu_book,
-                  size: 120,
-                  color: AppColors.primary.withOpacity(0.1),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: AppColors.primary.withOpacity(0.3),
+                    width: 1,
+                  ),
                 ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(AppSpacing.md),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
+                    const Icon(
+                      Icons.menu_book_rounded,
+                      size: 13,
+                      color: AppColors.primary,
+                    ),
+                    const SizedBox(width: 5),
                     Text(
-                      'Continue Reading',
-                      style: GoogleFonts.inter(
-                        fontSize: AppResponsive.scaleFont(
-                          context,
-                          min: 18,
-                          max: 24,
-                        ),
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.onSurface,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Surah $recentName',
-                      style: GoogleFonts.inter(
-                        fontSize: 16,
-                        color: AppColors.onSurfaceVariant,
-                      ),
-                    ),
-                    // Use Spacer to flexibly push the progress to the bottom
-                    const SizedBox(height: 32),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Ayah $displayVerse / $recentVerses',
-                          style: GoogleFonts.inter(
-                            fontSize: 13,
-                            letterSpacing: 0.65,
-                            color: AppColors.onSurfaceVariant,
-                          ),
-                        ),
-                        Text(
-                          '${(progress * 100).round()}%',
-                          style: GoogleFonts.inter(
-                            fontSize: 13,
-                            letterSpacing: 0.65,
-                            color: AppColors.primary,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(999),
-                      child: LinearProgressIndicator(
-                        value: progress,
-                        minHeight: 4,
-                        backgroundColor: Colors.white.withOpacity(0.1),
-                        valueColor: const AlwaysStoppedAnimation(
-                          AppColors.primary,
-                        ),
+                      'CONTINUE READING',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0.8,
+                        color: AppColors.primary,
                       ),
                     ),
                   ],
                 ),
               ),
+              const Icon(
+                Icons.arrow_forward_rounded,
+                size: 18,
+                color: AppColors.primary,
+              ),
             ],
           ),
-        ),
+          const SizedBox(height: 16),
+          Text(
+            'Surah $recentName',
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 20,
+              fontWeight: FontWeight.w800,
+              letterSpacing: -0.4,
+              color: AppColors.onBackground,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Verse $displayVerse of $recentVerses completed',
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 13,
+              color: AppColors.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 20),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Progress',
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.onSurfaceVariant,
+                ),
+              ),
+              Text(
+                '${(progress * 100).round()}%',
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.primary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(999),
+            child: LinearProgressIndicator(
+              value: progress,
+              minHeight: 6,
+              backgroundColor: Colors.white.withOpacity(0.08),
+              valueColor: const AlwaysStoppedAnimation(AppColors.primary),
+            ),
+          ),
+        ],
       ),
     );
   }

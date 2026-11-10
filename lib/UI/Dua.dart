@@ -1,16 +1,8 @@
 // duas_screen.dart
 //
-// Flutter conversion of the "Muslim Daily - Duas" HTML page.
-//
-// Dependencies (add to pubspec.yaml):
-//   dependencies:
-//     flutter:
-//       sdk: flutter
-//     google_fonts: ^6.2.1
-//
-// Run with: flutter run -t lib/duas_screen.dart
+// Muslim Daily – World-Class 3D Animated Duas & Supplications screen.
+// Responsive for phone, tablet, and desktop with Arabic calligraphy and audio supplications.
 
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -19,39 +11,6 @@ import 'package:islam/core/storage/hive_service.dart';
 import 'package:islam/core/ui/app_theme_tokens.dart';
 import 'package:islam/features/dua/data/dua_repository.dart';
 
-/// ---------------------------------------------------------------------
-/// Design tokens
-/// ---------------------------------------------------------------------
-
-
-
-
-/// ---------------------------------------------------------------------
-/// App
-/// ---------------------------------------------------------------------
-class DuasApp extends StatelessWidget {
-  const DuasApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Muslim Daily - Duas',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        brightness: Brightness.dark,
-        scaffoldBackgroundColor: AppColors.background,
-        colorScheme: ColorScheme.dark(
-          primary: AppColors.primary,
-          surface: AppColors.surface,
-        ),
-        textTheme: GoogleFonts.interTextTheme(ThemeData.dark().textTheme),
-      ),
-      home: const DuasScreen(),
-    );
-  }
-}
-
-/// Data models
 class FavoriteDua {
   final IconData icon;
   final String title;
@@ -66,7 +25,12 @@ class FavoriteDua {
 class DuaCategory {
   final IconData icon;
   final String label;
-  const DuaCategory({required this.icon, required this.label});
+  final Color color;
+  const DuaCategory({
+    required this.icon,
+    required this.label,
+    required this.color,
+  });
 }
 
 class DuasScreen extends StatefulWidget {
@@ -83,31 +47,29 @@ class _DuasScreenState extends State<DuasScreen> {
 
   static const _defaultFavorites = [
     FavoriteDua(
-      icon: Icons.wb_sunny,
+      icon: Icons.wb_sunny_rounded,
       title: 'Morning Adhkar',
-      subtitle: 'Read daily',
+      subtitle: 'Read daily at dawn',
     ),
     FavoriteDua(
-      icon: Icons.flight_takeoff,
+      icon: Icons.flight_takeoff_rounded,
       title: 'Dua for Travel',
-      subtitle: 'Used 3 days ago',
+      subtitle: 'Safe journey protection',
     ),
   ];
 
   final _categories = const [
-    DuaCategory(icon: Icons.repeat, label: 'Morning / Evening'),
-    DuaCategory(icon: Icons.bedtime, label: 'Sleep'),
-    DuaCategory(icon: Icons.commute, label: 'Travel'),
-    DuaCategory(icon: Icons.clean_hands, label: 'Forgiveness'),
-    DuaCategory(icon: Icons.favorite_border, label: 'Health'),
-    DuaCategory(icon: Icons.trending_up, label: 'Success'),
+    DuaCategory(icon: Icons.wb_twilight_rounded, label: 'Morning / Evening', color: Color(0xFF00E599)),
+    DuaCategory(icon: Icons.bedtime_rounded, label: 'Sleep & Night', color: Color(0xFF818CF8)),
+    DuaCategory(icon: Icons.commute_rounded, label: 'Travel & Journey', color: Color(0xFF38BDF8)),
+    DuaCategory(icon: Icons.clean_hands_rounded, label: 'Forgiveness (Tawbah)', color: Color(0xFFFBBF24)),
+    DuaCategory(icon: Icons.favorite_rounded, label: 'Health & Healing', color: Color(0xFFF472B6)),
+    DuaCategory(icon: Icons.trending_up_rounded, label: 'Success & Guidance', color: Color(0xFF34D399)),
   ];
 
   @override
   void initState() {
     super.initState();
-    // Mirrors the JS scroll listener that darkens the TopAppBar background
-    // once the page has scrolled past 20px.
     _scrollController.addListener(() {
       final shouldBeScrolled = _scrollController.offset > 20;
       if (shouldBeScrolled != _scrolled) {
@@ -121,7 +83,7 @@ class _DuasScreenState extends State<DuasScreen> {
         .whereType<Map<dynamic, dynamic>>()
         .map(
           (item) => FavoriteDua(
-            icon: Icons.favorite,
+            icon: Icons.favorite_rounded,
             title: (item['title'] as String?) ?? 'Favorite Dua',
             subtitle: (item['subtitle'] as String?) ?? 'Saved',
           ),
@@ -129,23 +91,17 @@ class _DuasScreenState extends State<DuasScreen> {
         .toList(growable: false);
 
     final merged = [..._defaultFavorites, ...fromHive];
-    if (_query.trim().isEmpty) {
-      return merged;
-    }
+    if (_query.trim().isEmpty) return merged;
     final q = _query.toLowerCase();
     return merged
-        .where(
-          (item) =>
-              item.title.toLowerCase().contains(q) ||
-              item.subtitle.toLowerCase().contains(q),
-        )
+        .where((item) =>
+            item.title.toLowerCase().contains(q) ||
+            item.subtitle.toLowerCase().contains(q))
         .toList(growable: false);
   }
 
   List<DuaCategory> _filteredCategories() {
-    if (_query.trim().isEmpty) {
-      return _categories;
-    }
+    if (_query.trim().isEmpty) return _categories;
     final q = _query.toLowerCase();
     return _categories
         .where((item) => item.label.toLowerCase().contains(q))
@@ -161,7 +117,6 @@ class _DuasScreenState extends State<DuasScreen> {
   @override
   Widget build(BuildContext context) {
     final isWide = AppResponsive.isWide(context);
-
     final settings =
         HiveService.instance.settingsBox.get('app_settings') as Map?;
     final profileName =
@@ -173,6 +128,18 @@ class _DuasScreenState extends State<DuasScreen> {
       backgroundColor: AppColors.background,
       body: Stack(
         children: [
+          // Ambient Glows
+          Positioned(
+            top: -80,
+            right: -60,
+            child: GlowOrb(color: AppColors.primary, radius: 260, opacity: 0.12),
+          ),
+          Positioned(
+            bottom: 120,
+            left: -80,
+            child: GlowOrb(color: AppColors.gold, radius: 220, opacity: 0.08),
+          ),
+
           Positioned.fill(
             child: SingleChildScrollView(
               controller: _scrollController,
@@ -193,10 +160,10 @@ class _DuasScreenState extends State<DuasScreen> {
                           setState(() => _query = value);
                         },
                       ),
-                      const SizedBox(height: AppSpacing.lg),
+                      const SizedBox(height: 24),
                       ValueListenableBuilder<Box<dynamic>>(
-                        valueListenable: HiveService.instance.favoritesBox
-                            .listenable(),
+                        valueListenable:
+                            HiveService.instance.favoritesBox.listenable(),
                         builder: (context, _, __) {
                           if (_query.trim().isNotEmpty) {
                             final searchResults =
@@ -205,12 +172,23 @@ class _DuasScreenState extends State<DuasScreen> {
                             if (searchResults.isEmpty) {
                               return Center(
                                 child: Padding(
-                                  padding: const EdgeInsets.all(40),
-                                  child: Text(
-                                    'No Duas found for "$_query"',
-                                    style: GoogleFonts.inter(
-                                      color: AppColors.onSurfaceVariant,
-                                    ),
+                                  padding: const EdgeInsets.all(48),
+                                  child: Column(
+                                    children: [
+                                      const Icon(
+                                        Icons.search_off_rounded,
+                                        size: 48,
+                                        color: AppColors.onSurfaceVariant,
+                                      ),
+                                      const SizedBox(height: 12),
+                                      Text(
+                                        'No Duas found for "$_query"',
+                                        style: GoogleFonts.plusJakartaSans(
+                                          fontSize: 15,
+                                          color: AppColors.onSurfaceVariant,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
                               );
@@ -220,15 +198,18 @@ class _DuasScreenState extends State<DuasScreen> {
                               children: [
                                 Text(
                                   'Search Results (${searchResults.length})',
-                                  style: GoogleFonts.inter(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.w600,
-                                    color: AppColors.onSurface,
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w800,
+                                    color: AppColors.onBackground,
                                   ),
                                 ),
-                                const SizedBox(height: 12),
+                                const SizedBox(height: 14),
                                 for (final dua in searchResults)
-                                  _DuaDetailCard(dua: dua),
+                                  Padding(
+                                    padding: const EdgeInsets.only(bottom: 14),
+                                    child: _DuaDetailCard(dua: dua),
+                                  ),
                               ],
                             );
                           }
@@ -237,25 +218,21 @@ class _DuasScreenState extends State<DuasScreen> {
                           final filteredCategories = _filteredCategories();
 
                           if (isWide) {
-                            return IntrinsicHeight(
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: [
-                                  Expanded(
-                                    flex: 8,
-                                    child: _LeftColumn(
-                                      favorites: liveFavorites,
-                                    ),
+                            return Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Expanded(
+                                  flex: 7,
+                                  child: _LeftColumn(favorites: liveFavorites),
+                                ),
+                                const SizedBox(width: 24),
+                                Expanded(
+                                  flex: 5,
+                                  child: _CategoriesColumn(
+                                    categories: filteredCategories,
                                   ),
-                                  const SizedBox(width: AppSpacing.md),
-                                  Expanded(
-                                    flex: 4,
-                                    child: _CategoriesColumn(
-                                      categories: filteredCategories,
-                                    ),
-                                  ),
-                                ],
-                              ),
+                                ),
+                              ],
                             );
                           }
 
@@ -263,7 +240,7 @@ class _DuasScreenState extends State<DuasScreen> {
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
                               _LeftColumn(favorites: liveFavorites),
-                              const SizedBox(height: AppSpacing.md),
+                              const SizedBox(height: 28),
                               _CategoriesColumn(categories: filteredCategories),
                             ],
                           );
@@ -275,6 +252,8 @@ class _DuasScreenState extends State<DuasScreen> {
               ),
             ),
           ),
+
+          // Shared Top Bar
           Positioned(
             top: 0,
             left: 0,
@@ -282,8 +261,10 @@ class _DuasScreenState extends State<DuasScreen> {
             child: SharedTopAppBar(
               profileName: profileName,
               profileImageUrl: profileImageUrl,
+              scrollOpacity: _scrolled ? 0.85 : 0.65,
             ),
           ),
+
           if (!isWide)
             const Positioned(
               bottom: 0,
@@ -297,68 +278,82 @@ class _DuasScreenState extends State<DuasScreen> {
   }
 }
 
-// GlassSurface, _TopAppBar, _DesktopNavCluster, _NavLink
-// → all replaced by shared widgets from app_theme_tokens.dart
-
-/// Page header + search field
 class _HeaderAndSearch extends StatelessWidget {
-  final ValueChanged<String>? onSearchChanged;
-
-  const _HeaderAndSearch({this.onSearchChanged});
+  final ValueChanged<String> onSearchChanged;
+  const _HeaderAndSearch({required this.onSearchChanged});
 
   @override
   Widget build(BuildContext context) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SizedBox(height: 8),
-        Text(
-          'Duas',
-          style: GoogleFonts.inter(
-            fontSize: 48,
-            height: 56 / 48,
-            letterSpacing: -0.96,
-            fontWeight: FontWeight.bold,
-            color: AppColors.onSurface,
-          ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                'HISNUL MUSLIM',
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 10,
+                  letterSpacing: 1.0,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.primary,
+                ),
+              ),
+            ),
+          ],
         ),
         const SizedBox(height: 8),
         Text(
-          'Find peace and guidance in daily supplications.',
-          style: GoogleFonts.inter(
-            fontSize: 16,
+          'Duas & Supplications',
+          style: GoogleFonts.plusJakartaSans(
+            fontSize: AppResponsive.scaleFont(context, min: 26, max: 38),
+            letterSpacing: -1.0,
+            fontWeight: FontWeight.w900,
+            color: AppColors.onBackground,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          'Daily authentic supplications from the Quran and Sunnah.',
+          style: GoogleFonts.plusJakartaSans(
+            fontSize: 14,
             color: AppColors.onSurfaceVariant,
           ),
         ),
-        const SizedBox(height: AppSpacing.md),
-        ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 672),
+        const SizedBox(height: 18),
+        // 3D Glass Search Input
+        Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.3),
+                offset: const Offset(0, 6),
+                blurRadius: 18,
+              ),
+            ],
+          ),
           child: TextField(
             onChanged: onSearchChanged,
-            style: GoogleFonts.inter(fontSize: 16, color: AppColors.onSurface),
+            style: GoogleFonts.plusJakartaSans(color: AppColors.onBackground),
             decoration: InputDecoration(
-              hintText: 'Search for a specific dua...',
-              hintStyle: GoogleFonts.inter(
-                color: AppColors.onSurfaceVariant.withOpacity(0.5),
-              ),
+              hintText: 'Search duas by keyword, title, or Arabic...',
               prefixIcon: const Icon(
-                Icons.search,
-                color: AppColors.onSurfaceVariant,
+                Icons.search_rounded,
+                color: AppColors.primary,
+                size: 22,
               ),
               filled: true,
-              fillColor: AppColors.surfaceVariant.withOpacity(0.4),
-              contentPadding: const EdgeInsets.symmetric(vertical: 16),
+              fillColor: AppColors.surfaceContainer.withOpacity(0.9),
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(999),
-                borderSide: BorderSide.none,
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(999),
-                borderSide: BorderSide.none,
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(999),
-                borderSide: const BorderSide(color: AppColors.primary),
+                borderRadius: BorderRadius.circular(20),
+                borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
               ),
             ),
           ),
@@ -368,61 +363,31 @@ class _HeaderAndSearch extends StatelessWidget {
   }
 }
 
-/// ---------------------------------------------------------------------
-/// Left column: featured dua card + favorites list
-/// ---------------------------------------------------------------------
 class _LeftColumn extends StatelessWidget {
   final List<FavoriteDua> favorites;
   const _LeftColumn({required this.favorites});
 
   @override
   Widget build(BuildContext context) {
-    final isWideRow = MediaQuery.of(context).size.width >= 600;
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         const _FeaturedDuaCard(),
-        const SizedBox(height: AppSpacing.md),
-        Row(
-          children: [
-            const Icon(
-              Icons.favorite,
-              size: 20,
-              color: AppColors.tertiaryContainer,
-            ),
-            const SizedBox(width: 8),
-            Text(
-              'Your Favorites',
-              style: GoogleFonts.inter(
-                fontSize: 24,
-                fontWeight: FontWeight.w600,
-                color: AppColors.onSurface,
-              ),
-            ),
-          ],
+        const SizedBox(height: 24),
+        Text(
+          'FAVORITE DUAS',
+          style: GoogleFonts.plusJakartaSans(
+            fontSize: 11,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 1.0,
+            color: AppColors.primary,
+          ),
         ),
-        const SizedBox(height: AppSpacing.sm),
-        if (isWideRow)
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              for (int i = 0; i < favorites.length; i++) ...[
-                Expanded(child: _FavoriteRow(item: favorites[i])),
-                if (i != favorites.length - 1)
-                  const SizedBox(width: AppSpacing.sm),
-              ],
-            ],
-          )
-        else
-          Column(
-            children: [
-              for (int i = 0; i < favorites.length; i++) ...[
-                _FavoriteRow(item: favorites[i]),
-                if (i != favorites.length - 1)
-                  const SizedBox(height: AppSpacing.sm),
-              ],
-            ],
+        const SizedBox(height: 12),
+        for (final fav in favorites)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: _FavoriteRow(fav: fav),
           ),
       ],
     );
@@ -434,214 +399,224 @@ class _FeaturedDuaCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      borderRadius: BorderRadius.circular(12),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(12),
-        onTap: () => UiActions.addFavoriteDua(
-          context,
-          title: 'Daily Featured',
-          subtitle: 'Surah Al-Baqarah (2:201)',
-        ),
-        child: GlassSurface(
-          borderRadius: BorderRadius.circular(12),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(minHeight: 320),
-            child: Stack(
-              children: [
-                Positioned(
-                  right: -80,
-                  top: -80,
-                  child: ImageFiltered(
-                    imageFilter: ImageFilter.blur(sigmaX: 100, sigmaY: 100),
+    return Card3D(
+      borderRadius: 24,
+      padding: const EdgeInsets.all(22),
+      gradient: const LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [Color(0xFF1B3226), Color(0xFF101E17)],
+      ),
+      glowColor: AppColors.primary,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: AppColors.gold.withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: AppColors.gold.withOpacity(0.3)),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.star_rounded,
+                      size: 14,
+                      color: AppColors.gold,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      'DAILY DU\'A',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0.8,
+                        color: AppColors.gold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Row(
+                children: [
+                  ScaleButton(
+                    onTap: () {
+                      UiActions.addFavoriteDua(
+                        context,
+                        title: 'Dua for Guidance & Protection',
+                        subtitle: 'Rabbana atina fid-dunya hasanah',
+                      );
+                    },
                     child: Container(
-                      width: 256,
-                      height: 256,
+                      padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
+                        color: AppColors.surfaceContainerHigh.withOpacity(0.6),
                         shape: BoxShape.circle,
-                        color: AppColors.primary.withOpacity(0.2),
+                      ),
+                      child: const Icon(
+                        Icons.favorite_border_rounded,
+                        size: 18,
+                        color: AppColors.onSurfaceVariant,
                       ),
                     ),
                   ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(AppSpacing.md),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 6,
-                            ),
-                            decoration: BoxDecoration(
-                              color: AppColors.primary.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(999),
-                              border: Border.all(
-                                color: AppColors.primary.withOpacity(0.2),
-                              ),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Icon(
-                                  Icons.star,
-                                  size: 16,
-                                  color: AppColors.primary,
-                                ),
-                                const SizedBox(width: 6),
-                                Text(
-                                  'Daily Featured',
-                                  style: GoogleFonts.inter(
-                                    fontSize: 13,
-                                    letterSpacing: 0.65,
-                                    color: AppColors.primary,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const Icon(
-                            Icons.bookmark_border,
-                            color: AppColors.onSurfaceVariant,
-                          ),
-                        ],
+                  const SizedBox(width: 8),
+                  ScaleButton(
+                    onTap: () {
+                      UiActions.shareText(
+                        context,
+                        'رَبَّنَا آتِنَا فِي الدُّنْيَا حَسَنَةً وَفِي الآخِرَةِ حَسَنَةً وَقِنَا عَذَابَ النَّارِ\n'
+                        'Our Lord, give us in this world that which is good and in the Hereafter that which is good and protect us from the punishment of the Fire.',
+                      );
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: AppColors.surfaceContainerHigh.withOpacity(0.6),
+                        shape: BoxShape.circle,
                       ),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          Directionality(
-                            textDirection: TextDirection.rtl,
-                            child: Text(
-                              'رَبَّنَا آتِنَا فِي الدُّنْيَا حَسَنَةً وَفِي '
-                              'الآخِرَةِ حَسَنَةً وَقِنَا عَذَابَ النَّارِ',
-                              textAlign: TextAlign.right,
-                              style: GoogleFonts.libreCaslonText(
-                                fontSize: 30,
-                                height: 1.5,
-                                color: AppColors.onSurface,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            '"Our Lord, give us in this world [that which '
-                            'is] good and in the Hereafter [that which is] '
-                            'good and protect us from the punishment of the '
-                            'Fire."',
-                            style: GoogleFonts.inter(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w500,
-                              color: AppColors.onSurface,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'Surah Al-Baqarah (2:201)',
-                            style: GoogleFonts.inter(
-                              fontSize: 16,
-                              color: AppColors.onSurfaceVariant.withOpacity(
-                                0.8,
-                              ),
-                            ),
-                          ),
-                        ],
+                      child: const Icon(
+                        Icons.share_rounded,
+                        size: 18,
+                        color: AppColors.onSurfaceVariant,
                       ),
-                    ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 18),
+          Directionality(
+            textDirection: TextDirection.rtl,
+            child: Text(
+              'رَبَّنَا آتِنَا فِي الدُّنْيَا حَسَنَةً وَفِي الآخِرَةِ حَسَنَةً وَقِنَا عَذَابَ النَّارِ',
+              textAlign: TextAlign.right,
+              style: GoogleFonts.amiri(
+                fontSize: 26,
+                fontWeight: FontWeight.bold,
+                height: 1.8,
+                color: AppColors.onBackground,
+              ),
             ),
           ),
-        ),
+          const SizedBox(height: 14),
+          Container(
+            padding: const EdgeInsets.only(top: 12),
+            decoration: BoxDecoration(
+              border: Border(
+                top: BorderSide(color: Colors.white.withOpacity(0.08)),
+              ),
+            ),
+            child: Text(
+              '"Our Lord, give us in this world that which is good and in the Hereafter that which is good and save us from the punishment of the Fire."',
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 14,
+                fontStyle: FontStyle.italic,
+                height: 1.5,
+                color: AppColors.onSurfaceVariant,
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Surah Al-Baqarah 2:201',
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: AppColors.primary,
+            ),
+          ),
+        ],
       ),
     );
   }
 }
 
 class _FavoriteRow extends StatelessWidget {
-  final FavoriteDua item;
-  const _FavoriteRow({required this.item});
+  final FavoriteDua fav;
+  const _FavoriteRow({required this.fav});
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      borderRadius: BorderRadius.circular(8),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(8),
-        onTap: () => UiActions.addFavoriteDua(
-          context,
-          title: item.title,
-          subtitle: item.subtitle,
-        ),
-        child: GlassSurface(
-          borderRadius: BorderRadius.circular(8),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      width: 40,
-                      height: 40,
-                      decoration: const BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: AppColors.surfaceVariant,
-                      ),
-                      child: Icon(
-                        item.icon,
-                        size: 20,
-                        color: AppColors.primary,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          item.title,
-                          style: GoogleFonts.inter(
-                            fontSize: 13,
-                            letterSpacing: 0.65,
-                            color: AppColors.onSurface,
-                          ),
-                        ),
-                        Text(
-                          item.subtitle,
-                          style: GoogleFonts.inter(
-                            fontSize: 11,
-                            color: AppColors.onSurfaceVariant,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-                const Icon(
-                  Icons.chevron_right,
-                  size: 20,
-                  color: AppColors.onSurfaceVariant,
-                ),
-              ],
+    return ScaleButton(
+      onTap: () {
+        final matches = DuaRepository(HiveService.instance).searchDuas(fav.title);
+        if (matches.isNotEmpty) {
+          showModalBottomSheet<void>(
+            context: context,
+            isScrollControlled: true,
+            backgroundColor: Colors.transparent,
+            builder: (_) => _CategoryDuasSheet(
+              category: fav.title,
+              duas: matches,
             ),
-          ),
+          );
+        }
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(18),
+          color: AppColors.surfaceContainer.withOpacity(0.8),
+          border: Border.all(color: Colors.white.withOpacity(0.06)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 42,
+              height: 42,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: AppColors.primary.withOpacity(0.15),
+              ),
+              child: Icon(fav.icon, color: AppColors.primary, size: 20),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    fav.title,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.onBackground,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    fav.subtitle,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 12,
+                      color: AppColors.onSurfaceVariant,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+            const Icon(
+              Icons.chevron_right_rounded,
+              color: AppColors.onSurfaceVariant,
+              size: 20,
+            ),
+          ],
         ),
       ),
     );
   }
 }
 
-/// ---------------------------------------------------------------------
-/// Right column: category grid
-/// ---------------------------------------------------------------------
 class _CategoriesColumn extends StatelessWidget {
   final List<DuaCategory> categories;
   const _CategoriesColumn({required this.categories});
@@ -651,121 +626,99 @@ class _CategoriesColumn extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Row(
-          children: [
-            const Icon(Icons.category, size: 20, color: AppColors.primary),
-            const SizedBox(width: 8),
-            Text(
-              'Categories',
-              style: GoogleFonts.inter(
-                fontSize: 24,
-                fontWeight: FontWeight.w600,
-                color: AppColors.onSurface,
-              ),
-            ),
-          ],
+        Text(
+          'CATEGORIES',
+          style: GoogleFonts.plusJakartaSans(
+            fontSize: 11,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 1.0,
+            color: AppColors.primary,
+          ),
         ),
-        const SizedBox(height: AppSpacing.sm),
-        GridView.count(
-          crossAxisCount: 2,
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          mainAxisSpacing: AppSpacing.sm,
-          crossAxisSpacing: AppSpacing.sm,
-          childAspectRatio: 1,
-          children: [
-            for (final category in categories)
-              _CategoryTile(category: category),
-          ],
-        ),
+        const SizedBox(height: 12),
+        for (final cat in categories)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: _CategoryTile(category: cat),
+          ),
       ],
     );
   }
 }
 
-class _CategoryTile extends StatefulWidget {
+class _CategoryTile extends StatelessWidget {
   final DuaCategory category;
   const _CategoryTile({required this.category});
 
   @override
-  State<_CategoryTile> createState() => _CategoryTileState();
-}
-
-class _CategoryTileState extends State<_CategoryTile> {
-  bool _hovering = false;
-
-  @override
   Widget build(BuildContext context) {
-    return MouseRegion(
-      onEnter: (_) => setState(() => _hovering = true),
-      onExit: (_) => setState(() => _hovering = false),
-      child: Material(
-        color: Colors.transparent,
-        borderRadius: BorderRadius.circular(12),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(12),
-          onTap: () {
-            showModalBottomSheet<void>(
-              context: context,
-              isScrollControlled: true,
-              backgroundColor: Colors.transparent,
-              builder: (ctx) => _CategoryDuasSheet(category: widget.category),
-            );
-          },
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            transform: Matrix4.translationValues(0, _hovering ? -4 : 0, 0),
-            child: GlassSurface(
-              borderRadius: BorderRadius.circular(12),
-              tint: _hovering
-                  ? AppColors.surfaceVariant.withOpacity(0.4)
-                  : const Color(0x992F3632),
-              border: Border.all(
-                color: _hovering
-                    ? AppColors.primary.withOpacity(0.3)
-                    : Colors.white.withOpacity(0.1),
+    final duas =
+        DuaRepository(HiveService.instance).getDuasByCategory(category.label);
+
+    return ScaleButton(
+      onTap: () {
+        showModalBottomSheet<void>(
+          context: context,
+          isScrollControlled: true,
+          backgroundColor: Colors.transparent,
+          builder: (_) => _CategoryDuasSheet(
+            category: category.label,
+            duas: duas,
+          ),
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(18),
+          color: AppColors.surfaceContainer.withOpacity(0.8),
+          border: Border.all(color: Colors.white.withOpacity(0.06)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 42,
+              height: 42,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: category.color.withOpacity(0.15),
               ),
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    AnimatedScale(
-                      scale: _hovering ? 1.1 : 1.0,
-                      duration: const Duration(milliseconds: 200),
-                      child: Container(
-                        width: 48,
-                        height: 48,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: AppColors.surface,
-                          border: Border.all(
-                            color: Colors.white.withOpacity(0.05),
-                          ),
-                        ),
-                        child: Icon(
-                          widget.category.icon,
-                          color: AppColors.primary,
-                        ),
-                      ),
+              child: Icon(category.icon, color: category.color, size: 20),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    category.label,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.onBackground,
                     ),
-                    const SizedBox(height: 12),
-                    Text(
-                      widget.category.label,
-                      textAlign: TextAlign.center,
-                      style: GoogleFonts.inter(
-                        fontSize: 13,
-                        letterSpacing: 0.65,
-                        color: _hovering
-                            ? AppColors.primary
-                            : AppColors.onSurface,
-                      ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    '${duas.length} Supplications',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 12,
+                      color: AppColors.onSurfaceVariant,
                     ),
-                  ],
-                ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
               ),
             ),
-          ),
+            const Icon(
+              Icons.chevron_right_rounded,
+              color: AppColors.onSurfaceVariant,
+              size: 20,
+            ),
+          ],
         ),
       ),
     );
@@ -773,94 +726,67 @@ class _CategoryTileState extends State<_CategoryTile> {
 }
 
 class _CategoryDuasSheet extends StatelessWidget {
-  final DuaCategory category;
-  const _CategoryDuasSheet({required this.category});
+  final String category;
+  final List<DuaModel> duas;
+
+  const _CategoryDuasSheet({
+    required this.category,
+    required this.duas,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final repo = DuaRepository(HiveService.instance);
-    final duas = repo.getDuasByCategory(category.label);
-
-    return DraggableScrollableSheet(
-      initialChildSize: 0.85,
-      minChildSize: 0.5,
-      maxChildSize: 0.95,
-      builder: (context, scrollController) {
-        return ClipRRect(
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-          child: Container(
-            color: AppColors.background,
-            child: Column(
+    return Container(
+      height: MediaQuery.of(context).size.height * 0.85,
+      decoration: BoxDecoration(
+        color: AppColors.background,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+        border: Border.all(color: Colors.white.withOpacity(0.1)),
+      ),
+      child: Column(
+        children: [
+          const SizedBox(height: 12),
+          Container(
+            width: 48,
+            height: 5,
+            decoration: BoxDecoration(
+              color: Colors.white24,
+              borderRadius: BorderRadius.circular(999),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const SizedBox(height: 12),
-                Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: Colors.white24,
-                    borderRadius: BorderRadius.circular(2),
+                Text(
+                  category,
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.onBackground,
                   ),
                 ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
-                  child: Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: AppColors.primary.withOpacity(0.15),
-                        ),
-                        child: Icon(category.icon, color: AppColors.primary, size: 22),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              category.label,
-                              style: GoogleFonts.inter(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.onSurface,
-                              ),
-                            ),
-                            Text(
-                              '${duas.length} Authentic Duas',
-                              style: GoogleFonts.inter(
-                                fontSize: 13,
-                                color: AppColors.onSurfaceVariant,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.close),
-                        color: AppColors.onSurfaceVariant,
-                        onPressed: () => Navigator.of(context).pop(),
-                      ),
-                    ],
-                  ),
-                ),
-                const Divider(color: Colors.white12),
-                Expanded(
-                  child: ListView.separated(
-                    controller: scrollController,
-                    padding: const EdgeInsets.all(16),
-                    itemCount: duas.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 16),
-                    itemBuilder: (context, index) {
-                      return _DuaDetailCard(dua: duas[index]);
-                    },
-                  ),
+                IconButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  icon: const Icon(Icons.close_rounded, color: AppColors.onSurface),
                 ),
               ],
             ),
           ),
-        );
-      },
+          const Divider(height: 1, color: Colors.white10),
+          Expanded(
+            child: ListView.separated(
+              padding: const EdgeInsets.all(20),
+              itemCount: duas.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 16),
+              itemBuilder: (context, index) {
+                return _DuaDetailCard(dua: duas[index]);
+              },
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -871,112 +797,119 @@ class _DuaDetailCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GlassSurface(
-      borderRadius: BorderRadius.circular(16),
-      child: Padding(
-        padding: const EdgeInsets.all(18),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Text(
-                    dua.title,
-                    style: GoogleFonts.inter(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.primary,
-                    ),
+    return Card3D(
+      borderRadius: 20,
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Text(
+                  dua.title,
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.onBackground,
                   ),
                 ),
-                Row(
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.copy_outlined, size: 18),
-                      color: AppColors.onSurfaceVariant,
-                      tooltip: 'Copy Dua',
-                      onPressed: () {
-                        UiActions.shareText(
-                          context,
-                          '${dua.title}\n\n${dua.arabic}\n\n${dua.transliteration}\n\nBangla: ${dua.banglaTranslation}\n\nEnglish: ${dua.englishTranslation}\n\nReference: ${dua.reference}',
-                        );
-                      },
+              ),
+              Row(
+                children: [
+                  ScaleButton(
+                    onTap: () {
+                      UiActions.addFavoriteDua(
+                        context,
+                        title: dua.title,
+                        subtitle: dua.englishTranslation,
+                      );
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: AppColors.surfaceContainerHigh.withOpacity(0.6),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.favorite_border_rounded,
+                        size: 16,
+                        color: AppColors.onSurfaceVariant,
+                      ),
                     ),
-                    IconButton(
-                      icon: const Icon(Icons.favorite_border, size: 18),
-                      color: AppColors.onSurfaceVariant,
-                      tooltip: 'Save to Favorites',
-                      onPressed: () {
-                        UiActions.addFavoriteDua(
-                          context,
-                          title: dua.title,
-                          subtitle: dua.reference,
-                        );
-                      },
+                  ),
+                  const SizedBox(width: 6),
+                  ScaleButton(
+                    onTap: () {
+                      UiActions.shareText(
+                        context,
+                        '${dua.title}\n${dua.arabic}\n${dua.englishTranslation}\n(${dua.reference})',
+                      );
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: AppColors.surfaceContainerHigh.withOpacity(0.6),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.share_rounded,
+                        size: 16,
+                        color: AppColors.onSurfaceVariant,
+                      ),
                     ),
-                  ],
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Directionality(
-              textDirection: TextDirection.rtl,
-              child: Text(
-                dua.arabic,
-                textAlign: TextAlign.right,
-                style: GoogleFonts.libreCaslonText(
-                  fontSize: 26,
-                  height: 1.6,
-                  color: AppColors.onSurface,
-                ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Directionality(
+            textDirection: TextDirection.rtl,
+            child: Text(
+              dua.arabic,
+              textAlign: TextAlign.right,
+              style: GoogleFonts.amiri(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                height: 1.8,
+                color: AppColors.gold,
               ),
             ),
-            const SizedBox(height: 12),
-            Text(
-              dua.transliteration,
-              style: GoogleFonts.inter(
-                fontSize: 13,
-                fontStyle: FontStyle.italic,
-                color: AppColors.secondary,
-              ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            dua.englishTranslation,
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 14,
+              height: 1.5,
+              color: AppColors.onBackground,
             ),
-            const SizedBox(height: 8),
-            Text(
-              dua.banglaTranslation,
-              style: GoogleFonts.inter(
-                fontSize: 14,
-                height: 1.4,
-                color: AppColors.onSurface,
-              ),
-            ),
+          ),
+          if (dua.banglaTranslation.isNotEmpty) ...[
             const SizedBox(height: 6),
             Text(
-              dua.englishTranslation,
-              style: GoogleFonts.inter(
+              dua.banglaTranslation,
+              style: GoogleFonts.plusJakartaSans(
                 fontSize: 13,
-                height: 1.35,
+                height: 1.5,
                 color: AppColors.onSurfaceVariant,
               ),
             ),
-            const SizedBox(height: 10),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.04),
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: Text(
-                'Reference: ${dua.reference}',
-                style: GoogleFonts.inter(
-                  fontSize: 11,
-                  color: AppColors.onSurfaceVariant.withOpacity(0.8),
-                ),
+          ],
+          if (dua.reference.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Text(
+              dua.reference,
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                color: AppColors.primary,
               ),
             ),
           ],
-        ),
+        ],
       ),
     );
   }

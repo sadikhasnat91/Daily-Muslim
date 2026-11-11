@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:islam/core/notifications/azan_notification_service.dart';
 import 'package:islam/core/storage/hive_keys.dart';
 import 'package:islam/core/storage/hive_service.dart';
 import 'package:islam/features/location/data/bd_districts.dart';
+import 'package:islam/features/location/data/location_detection_service.dart';
 import 'package:islam/features/location/domain/country_option.dart';
 import 'package:islam/features/prayer/data/prayer_repository.dart';
 import 'package:islam/features/settings/domain/app_settings.dart';
@@ -349,12 +351,36 @@ class SettingsController extends Notifier<AppSettings> {
     );
   }
 
-  /// Recomputes today's prayer times and re-schedules Azan notifications so
-  /// they reflect the latest settings (timezone, calculation method,
-  /// madhhab, per-prayer toggles, silent mode, etc.).
+  /// Recomputes prayer times and re-schedules weekly Azan notifications.
   Future<void> _rescheduleAzan() async {
-    final repo = PrayerRepository(HiveService.instance);
-    await repo.getPrayerDayData(DateTime.now());
+    await AzanNotificationService.instance.scheduleWeekly(state);
+  }
+
+  /// Automatically requests GPS location, detects coordinates, updates state,
+  /// and recalculates prayer times.
+  Future<bool> detectAndApplyGpsLocation() async {
+    final result = await LocationDetectionService.instance
+        .detectGpsLocation(requestPermission: true);
+    if (result != null) {
+      await setLocation(
+        city: result.city,
+        country: result.country,
+        countryCode: result.countryCode,
+        latitude: result.lat,
+        longitude: result.lng,
+        timezone: result.timezone,
+      );
+      return true;
+    }
+    return false;
+  }
+
+  /// Sends a test notification immediately so the user can verify their alerts.
+  Future<void> sendTestNotification({bool testAzan = true}) async {
+    await AzanNotificationService.instance.sendTestNotification(
+      settings: state,
+      testAzanAudio: testAzan,
+    );
   }
 
   int _defaultMethodForCountry(String countryCode) {

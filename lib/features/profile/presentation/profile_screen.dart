@@ -39,8 +39,9 @@ class ProfileScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: Stack(
-        children: [
+      body: AtmosphericBackground(
+        child: Stack(
+          children: [
           // Ambient Glows
           Positioned(
             top: 20,
@@ -394,7 +395,8 @@ class ProfileScreen extends ConsumerWidget {
             ),
         ],
       ),
-    );
+    ),
+  );
   }
 
   static Widget _tileDivider() => Divider(

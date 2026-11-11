@@ -154,27 +154,14 @@ class _TasbihScreenState extends ConsumerState<TasbihScreen>
           ),
         ],
       ),
-      body: Stack(
-        children: [
-          // Ambient Glows
-          Positioned(
-            top: 50,
-            left: -60,
-            child: GlowOrb(color: AppColors.primary, radius: 260, opacity: 0.14),
-          ),
-          Positioned(
-            bottom: 50,
-            right: -60,
-            child: GlowOrb(color: AppColors.gold, radius: 220, opacity: 0.1),
-          ),
-
-          SafeArea(
-            child: Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 520),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                  child: Column(
+      body: AtmosphericBackground(
+        child: SafeArea(
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 520),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                child: Column(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       // Dhikr Preset Selector Chips
@@ -464,9 +451,8 @@ class _TasbihScreenState extends ConsumerState<TasbihScreen>
               ),
             ),
           ),
-        ],
-      ),
-    );
+        ),
+      );
   }
 }
 
@@ -481,12 +467,32 @@ class _TasbihArcPainter extends CustomPainter {
 
     // Track
     final trackPaint = Paint()
-      ..color = Colors.white.withOpacity(0.08)
+      ..color = Colors.white.withOpacity(0.07)
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 6;
+      ..strokeWidth = 6.5;
     canvas.drawCircle(center, radius, trackPaint);
 
-    // Progress
+    // 33 Physical Misbaha Bead Markers along track
+    const totalBeads = 33;
+    final activeBeadCount = (progress * totalBeads).round();
+
+    for (var i = 0; i < totalBeads; i++) {
+      final angle = -math.pi / 2 + (2 * math.pi * i / totalBeads);
+      final bx = center.dx + radius * math.cos(angle);
+      final by = center.dy + radius * math.sin(angle);
+      final bPos = Offset(bx, by);
+
+      final isPast = i < activeBeadCount;
+      final beadPaint = Paint()
+        ..color = isPast
+            ? AppColors.primary
+            : Colors.white.withOpacity(0.18)
+        ..style = PaintingStyle.fill;
+
+      canvas.drawCircle(bPos, (i % 11 == 0) ? 3.5 : 2.2, beadPaint);
+    }
+
+    // Glowing Continuous Progress Arc
     final progressPaint = Paint()
       ..shader = SweepGradient(
         colors: [
@@ -497,7 +503,7 @@ class _TasbihArcPainter extends CustomPainter {
         transform: const GradientRotation(-math.pi / 2),
       ).createShader(Rect.fromCircle(center: center, radius: radius))
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 6
+      ..strokeWidth = 6.5
       ..strokeCap = StrokeCap.round;
 
     const startAngle = -math.pi / 2;
@@ -509,6 +515,23 @@ class _TasbihArcPainter extends CustomPainter {
       false,
       progressPaint,
     );
+
+    // Glowing Lead Bead at Progress Tip
+    if (progress > 0.01) {
+      final tipAngle = startAngle + sweepAngle;
+      final tipPos = Offset(
+        center.dx + radius * math.cos(tipAngle),
+        center.dy + radius * math.sin(tipAngle),
+      );
+
+      final glowPaint = Paint()
+        ..color = AppColors.primary.withOpacity(0.65)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
+      canvas.drawCircle(tipPos, 8, glowPaint);
+
+      final corePaint = Paint()..color = Colors.white;
+      canvas.drawCircle(tipPos, 3.8, corePaint);
+    }
   }
 
   @override

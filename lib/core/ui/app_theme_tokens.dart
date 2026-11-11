@@ -3,6 +3,7 @@
 // World-class design tokens, 3D presentation components, physics-based micro-interactions,
 // and responsive layout helpers for the Daily Muslim application.
 
+import 'dart:math' as math;
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -16,23 +17,24 @@ class AppColors {
   AppColors._();
 
   // Premium obsidian dark canvas
-  static const background = Color(0xFF080E0B);
-  static const surface = Color(0xFF0E1612);
-  static const surfaceContainer = Color(0xFF131D18);
-  static const surfaceContainerHigh = Color(0xFF19251F);
-  static const surfaceVariant = Color(0xFF223129);
+  static const background = Color(0xFF060B08);
+  static const surface = Color(0xFF0C1410);
+  static const surfaceContainer = Color(0xFF101B15);
+  static const surfaceContainerHigh = Color(0xFF16251E);
+  static const surfaceVariant = Color(0xFF1F3229);
 
   // Vibrant emerald primary
   static const primary = Color(0xFF00E599);
   static const primaryLight = Color(0xFF4EDEA3);
   static const primaryDark = Color(0xFF059669);
-  static const primaryGlow = Color(0x5500E599);
-  static const onPrimary = Color(0xFF002E1B);
+  static const primaryGlow = Color(0x6600E599);
+  static const onPrimary = Color(0xFF002B19);
 
-  // Royal gold accents (Kaaba, Quran highlights, streaks)
+  // Royal celestial gold accents (Kaaba, Quran highlights, streaks)
   static const gold = Color(0xFFFBBF24);
+  static const goldLight = Color(0xFFFDE68A);
   static const goldDark = Color(0xFFD97706);
-  static const goldGlow = Color(0x44FBBF24);
+  static const goldGlow = Color(0x55FBBF24);
 
   // Secondary & Accents
   static const secondary = Color(0xFF7DE3B8);
@@ -44,8 +46,8 @@ class AppColors {
   static const onBackground = Color(0xFFEDF5EF);
   static const onSurface = Color(0xFFE2EBE5);
   static const onSurfaceVariant = Color(0xFF9EABA3);
-  static const borderLight = Color(0x1FFFFFFF);
-  static const borderSubtle = Color(0x0FFFFFFF);
+  static const borderLight = Color(0x24FFFFFF);
+  static const borderSubtle = Color(0x12FFFFFF);
 
   // Gradients
   static const primaryGradient = LinearGradient(
@@ -70,6 +72,12 @@ class AppColors {
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
     colors: [Color(0xFF183124), Color(0xFF0B1711)],
+  );
+
+  static const cosmicEmeraldGradient = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [Color(0xFF1B3D2D), Color(0xFF0A1610)],
   );
 }
 
@@ -324,7 +332,7 @@ class GlassSurface extends StatelessWidget {
 // ---------------------------------------------------------------------------
 // 3D Dimensional Card with Specular Top Highlight & Depth
 // ---------------------------------------------------------------------------
-class Card3D extends StatelessWidget {
+class Card3D extends StatefulWidget {
   const Card3D({
     super.key,
     required this.child,
@@ -334,6 +342,7 @@ class Card3D extends StatelessWidget {
     this.onTap,
     this.glowColor,
     this.border,
+    this.elevation = 1.0,
   });
 
   final Widget child;
@@ -343,66 +352,159 @@ class Card3D extends StatelessWidget {
   final VoidCallback? onTap;
   final Color? glowColor;
   final BoxBorder? border;
+  final double elevation;
+
+  @override
+  State<Card3D> createState() => _Card3DState();
+}
+
+class _Card3DState extends State<Card3D> {
+  double _tiltX = 0.0;
+  double _tiltY = 0.0;
+  bool _pressed = false;
+
+  void _onPanUpdate(DragUpdateDetails details, Size size) {
+    if (size.width == 0 || size.height == 0) return;
+    final dx = (details.localPosition.dx / size.width) - 0.5;
+    final dy = (details.localPosition.dy / size.height) - 0.5;
+    setState(() {
+      _tiltX = (-dy * 0.12).clamp(-0.08, 0.08);
+      _tiltY = (dx * 0.12).clamp(-0.08, 0.08);
+    });
+  }
+
+  void _onPanEnd() {
+    setState(() {
+      _tiltX = 0.0;
+      _tiltY = 0.0;
+      _pressed = false;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    final content = Container(
+    final effectiveRadius = widget.borderRadius;
+    final glow = widget.glowColor;
+
+    final content = AnimatedContainer(
+      duration: const Duration(milliseconds: 180),
+      curve: Curves.easeOutCubic,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(borderRadius),
-        gradient: gradient ??
+        borderRadius: BorderRadius.circular(effectiveRadius),
+        gradient: widget.gradient ??
             const LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [Color(0xFF16231D), Color(0xFF0F1813)],
+              colors: [Color(0xFF16251E), Color(0xFF0C1410)],
             ),
-        border: border ??
+        border: widget.border ??
             Border.all(
-              color: Colors.white.withOpacity(0.08),
-              width: 1,
+              color: glow != null
+                  ? glow.withOpacity(0.35)
+                  : Colors.white.withOpacity(0.09),
+              width: 1.2,
             ),
         boxShadow: [
+          // Deep ambient drop shadow
           BoxShadow(
-            color: Colors.black.withOpacity(0.45),
-            offset: const Offset(0, 10),
-            blurRadius: 24,
+            color: Colors.black.withOpacity(0.6),
+            offset: Offset(0, 10 * widget.elevation),
+            blurRadius: 26 * widget.elevation,
             spreadRadius: -4,
           ),
-          if (glowColor != null)
+          // Atmospheric color glow
+          if (glow != null) ...[
             BoxShadow(
-              color: glowColor!.withOpacity(0.2),
+              color: glow.withOpacity(0.22),
               offset: const Offset(0, 4),
-              blurRadius: 20,
-              spreadRadius: 0,
+              blurRadius: 28,
+              spreadRadius: 1,
             ),
-          // 3D Top specular highlight edge
+            BoxShadow(
+              color: glow.withOpacity(0.12),
+              offset: const Offset(0, 0),
+              blurRadius: 40,
+              spreadRadius: 4,
+            ),
+          ],
+          // 3D Top specular glass rim
           BoxShadow(
-            color: Colors.white.withOpacity(0.08),
-            offset: const Offset(0, -1),
+            color: Colors.white.withOpacity(0.14),
+            offset: const Offset(0, -1.2),
             blurRadius: 0,
             spreadRadius: 0,
           ),
         ],
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(borderRadius),
-        child: Padding(
-          padding: padding,
-          child: child,
-        ),
+      child: Stack(
+        children: [
+          // Top-left specular gloss highlight gradient
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            height: 1.5,
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.vertical(
+                  top: Radius.circular(effectiveRadius),
+                ),
+                gradient: LinearGradient(
+                  colors: [
+                    Colors.white.withOpacity(0.35),
+                    Colors.white.withOpacity(0.0),
+                  ],
+                  stops: const [0.0, 0.8],
+                ),
+              ),
+            ),
+          ),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(effectiveRadius),
+            child: Padding(
+              padding: widget.padding,
+              child: widget.child,
+            ),
+          ),
+        ],
       ),
     );
 
-    if (onTap != null) {
-      return ScaleButton(onTap: onTap, child: content);
+    if (widget.onTap != null) {
+      return LayoutBuilder(
+        builder: (context, constraints) {
+          final size = Size(constraints.maxWidth, constraints.maxHeight);
+          return GestureDetector(
+            onTapDown: (_) => setState(() => _pressed = true),
+            onTapUp: (_) => setState(() => _pressed = false),
+            onTapCancel: _onPanEnd,
+            onHorizontalDragUpdate: (d) => _onPanUpdate(d, size),
+            onVerticalDragUpdate: (d) => _onPanUpdate(d, size),
+            onHorizontalDragEnd: (_) => _onPanEnd(),
+            onVerticalDragEnd: (_) => _onPanEnd(),
+            onTap: widget.onTap,
+            child: Transform(
+              alignment: Alignment.center,
+              transform: Matrix4.identity()
+                ..setEntry(3, 2, 0.001)
+                ..rotateX(_tiltX)
+                ..rotateY(_tiltY)
+                ..scale(_pressed ? 0.975 : 1.0),
+              child: content,
+            ),
+          );
+        },
+      );
     }
+
     return content;
   }
 }
 
 // ---------------------------------------------------------------------------
-// 3D Tactile Animated Button
+// 3D Physical Extruded Mechanical Button
 // ---------------------------------------------------------------------------
-class Button3D extends StatelessWidget {
+class Button3D extends StatefulWidget {
   const Button3D({
     super.key,
     required this.label,
@@ -427,10 +529,19 @@ class Button3D extends StatelessWidget {
   final Color? glowColor;
 
   @override
+  State<Button3D> createState() => _Button3DState();
+}
+
+class _Button3DState extends State<Button3D> {
+  bool _pressed = false;
+
+  @override
   Widget build(BuildContext context) {
-    final isEnabled = onTap != null;
+    final isEnabled = widget.onTap != null;
+    final effectiveGlow = widget.glowColor ?? AppColors.primary;
+
     final effectiveGradient = isEnabled
-        ? (gradient ?? AppColors.primaryGradient)
+        ? (widget.gradient ?? AppColors.primaryGradient)
         : LinearGradient(
             colors: [
               AppColors.surfaceVariant.withOpacity(0.6),
@@ -438,52 +549,56 @@ class Button3D extends StatelessWidget {
             ],
           );
 
-    final widgetContent = Container(
-      height: height,
+    const extrusion = 4.0;
+    final dy = _pressed ? extrusion : 0.0;
+
+    final cap = AnimatedContainer(
+      duration: const Duration(milliseconds: 90),
+      curve: Curves.easeOutQuad,
+      height: widget.height,
       padding: const EdgeInsets.symmetric(horizontal: 24),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(borderRadius),
+        borderRadius: BorderRadius.circular(widget.borderRadius),
         gradient: effectiveGradient,
         border: Border.all(
-          color: Colors.white.withOpacity(0.18),
-          width: 1,
+          color: Colors.white.withOpacity(0.24),
+          width: 1.2,
         ),
-        boxShadow: isEnabled
+        boxShadow: isEnabled && !_pressed
             ? [
                 BoxShadow(
-                  color: (glowColor ?? AppColors.primary).withOpacity(0.35),
+                  color: effectiveGlow.withOpacity(0.4),
                   offset: const Offset(0, 8),
-                  blurRadius: 20,
-                  spreadRadius: -3,
+                  blurRadius: 22,
+                  spreadRadius: -2,
                 ),
                 BoxShadow(
-                  color: Colors.white.withOpacity(0.25),
+                  color: Colors.white.withOpacity(0.3),
                   offset: const Offset(0, -1),
                   blurRadius: 0,
-                  spreadRadius: 0,
                 ),
               ]
             : null,
       ),
       child: Row(
-        mainAxisSize: isFullWidth ? MainAxisSize.max : MainAxisSize.min,
+        mainAxisSize: widget.isFullWidth ? MainAxisSize.max : MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          if (icon != null) ...[
+          if (widget.icon != null) ...[
             Icon(
-              icon,
-              color: textColor ?? AppColors.onPrimary,
+              widget.icon,
+              color: widget.textColor ?? AppColors.onPrimary,
               size: 20,
             ),
             const SizedBox(width: 10),
           ],
           Text(
-            label,
+            widget.label,
             style: GoogleFonts.plusJakartaSans(
               fontSize: 15,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 0.3,
-              color: textColor ?? AppColors.onPrimary,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 0.4,
+              color: widget.textColor ?? AppColors.onPrimary,
             ),
           ),
         ],
@@ -491,14 +606,358 @@ class Button3D extends StatelessWidget {
     );
 
     if (!isEnabled) {
-      return isFullWidth ? SizedBox(width: double.infinity, child: widgetContent) : widgetContent;
+      return widget.isFullWidth ? SizedBox(width: double.infinity, child: cap) : cap;
     }
 
-    return ScaleButton(
-      onTap: onTap,
-      child: isFullWidth
-          ? SizedBox(width: double.infinity, child: widgetContent)
-          : widgetContent,
+    final buttonWidget = GestureDetector(
+      onTapDown: (_) {
+        setState(() => _pressed = true);
+        HapticFeedback.lightImpact();
+      },
+      onTapUp: (_) => setState(() => _pressed = false),
+      onTapCancel: () => setState(() => _pressed = false),
+      onTap: widget.onTap,
+      behavior: HitTestBehavior.opaque,
+      child: SizedBox(
+        height: widget.height + extrusion,
+        child: Stack(
+          alignment: Alignment.topCenter,
+          children: [
+            // Dark base layer (physical 3D extrusion)
+            Positioned(
+              bottom: 0,
+              left: 0,
+              right: 0,
+              height: widget.height,
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(widget.borderRadius),
+                  color: const Color(0xFF00331D),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.55),
+                      offset: const Offset(0, 6),
+                      blurRadius: 14,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            // Floating top cap that moves down on press
+            Positioned(
+              top: dy,
+              left: 0,
+              right: 0,
+              child: cap,
+            ),
+          ],
+        ),
+      ),
+    );
+
+    return widget.isFullWidth
+        ? SizedBox(width: double.infinity, child: buttonWidget)
+        : buttonWidget;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Atmospheric Cinematic Canvas (Particle Starfield + Sacred Geometry + Nebulas)
+// ---------------------------------------------------------------------------
+class AtmosphericBackground extends StatefulWidget {
+  const AtmosphericBackground({super.key, this.child});
+
+  final Widget? child;
+
+  @override
+  State<AtmosphericBackground> createState() => _AtmosphericBackgroundState();
+}
+
+class _AtmosphericBackgroundState extends State<AtmosphericBackground>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _nebulaController;
+
+  @override
+  void initState() {
+    super.initState();
+    _nebulaController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 12),
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _nebulaController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        // Base obsidian dark void
+        Positioned.fill(
+          child: Container(color: AppColors.background),
+        ),
+
+        // Animated Cosmic Nebulas
+        AnimatedBuilder(
+          animation: _nebulaController,
+          builder: (context, _) {
+            final t = _nebulaController.value;
+            final offset1 = Offset(
+              -60 + 20 * math.sin(t * 2 * math.pi),
+              -80 + 25 * math.cos(t * 2 * math.pi),
+            );
+            final offset2 = Offset(
+              -80 + 30 * math.cos(t * 2 * math.pi),
+              260 + 20 * math.sin(t * 2 * math.pi),
+            );
+
+            return Stack(
+              children: [
+                // Top-right Primary Emerald Nebula
+                Positioned(
+                  top: offset1.dy,
+                  right: offset1.dx,
+                  child: GlowOrb(
+                    color: AppColors.primary,
+                    radius: 280,
+                    opacity: 0.16 + 0.05 * math.sin(t * math.pi),
+                  ),
+                ),
+                // Mid-left Celestial Gold Nebula
+                Positioned(
+                  top: offset2.dy,
+                  left: offset2.dx,
+                  child: GlowOrb(
+                    color: AppColors.gold,
+                    radius: 240,
+                    opacity: 0.10 + 0.04 * math.cos(t * math.pi),
+                  ),
+                ),
+                // Bottom-right Deep Cyan/Emerald Depth
+                Positioned(
+                  bottom: -60,
+                  right: -60,
+                  child: GlowOrb(
+                    color: const Color(0xFF00E599),
+                    radius: 220,
+                    opacity: 0.12,
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
+
+        // Starfield & Sacred Lattice Canvas
+        Positioned.fill(
+          child: IgnorePointer(
+            child: CustomPaint(
+              painter: _AtmosphericParticlePainter(),
+            ),
+          ),
+        ),
+
+        if (widget.child != null) widget.child!,
+      ],
+    );
+  }
+}
+
+class _AtmosphericParticlePainter extends CustomPainter {
+  // Precomputed deterministic stars to guarantee 60fps with zero allocations
+  static final List<Offset> _stars = List.generate(42, (i) {
+    final x = ((i * 37 + 13) % 100) / 100.0;
+    final y = ((i * 73 + 29) % 100) / 100.0;
+    return Offset(x, y);
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final starPaint = Paint()..color = Colors.white.withOpacity(0.18);
+    final goldStarPaint = Paint()..color = AppColors.gold.withOpacity(0.24);
+
+    for (var i = 0; i < _stars.length; i++) {
+      final p = _stars[i];
+      final pos = Offset(p.dx * size.width, p.dy * size.height);
+      final r = (i % 3 == 0) ? 1.4 : 0.8;
+      canvas.drawCircle(pos, r, (i % 5 == 0) ? goldStarPaint : starPaint);
+    }
+
+    // Sacred 8-point geometric star subtle watermark in top quadrant
+    final center = Offset(size.width * 0.82, size.height * 0.18);
+    final radius = size.width * 0.28;
+    final latticePaint = Paint()
+      ..color = AppColors.gold.withOpacity(0.025)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.0;
+
+    canvas.drawCircle(center, radius, latticePaint);
+    canvas.drawCircle(center, radius * 0.65, latticePaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+// ---------------------------------------------------------------------------
+// 3D Spatial Staggered Entrance Animation
+// ---------------------------------------------------------------------------
+class Entrance3D extends StatefulWidget {
+  const Entrance3D({
+    super.key,
+    required this.child,
+    this.delay = Duration.zero,
+    this.duration = const Duration(milliseconds: 650),
+    this.offsetY = 32.0,
+  });
+
+  final Widget child;
+  final Duration delay;
+  final Duration duration;
+  final double offsetY;
+
+  @override
+  State<Entrance3D> createState() => _Entrance3DState();
+}
+
+class _Entrance3DState extends State<Entrance3D>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _fadeAnimation;
+  late final Animation<double> _slideAnimation;
+  late final Animation<double> _tiltAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(vsync: this, duration: widget.duration);
+
+    _fadeAnimation = CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeOut,
+    );
+
+    _slideAnimation = Tween<double>(begin: widget.offsetY, end: 0.0).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic),
+    );
+
+    _tiltAnimation = Tween<double>(begin: 0.08, end: 0.0).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic),
+    );
+
+    if (widget.delay == Duration.zero) {
+      _controller.forward();
+    } else {
+      Future.delayed(widget.delay, () {
+        if (mounted) _controller.forward();
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        return Opacity(
+          opacity: _fadeAnimation.value,
+          child: Transform(
+            alignment: Alignment.center,
+            transform: Matrix4.identity()
+              ..setEntry(3, 2, 0.001)
+              ..translate(0.0, _slideAnimation.value, 0.0)
+              ..rotateX(_tiltAnimation.value),
+            child: child,
+          ),
+        );
+      },
+      child: widget.child,
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// 3D Holographic Badge with Specular Border
+// ---------------------------------------------------------------------------
+class HoloBadge extends StatelessWidget {
+  const HoloBadge({
+    super.key,
+    required this.label,
+    this.icon,
+    this.color = AppColors.primary,
+    this.isGold = false,
+  });
+
+  final String label;
+  final IconData? icon;
+  final Color color;
+  final bool isGold;
+
+  @override
+  Widget build(BuildContext context) {
+    final effectiveColor = isGold ? AppColors.gold : color;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: effectiveColor.withOpacity(0.16),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: effectiveColor.withOpacity(0.4),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: effectiveColor.withOpacity(0.2),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (icon != null) ...[
+            Icon(icon, size: 12, color: effectiveColor),
+            const SizedBox(width: 5),
+          ] else ...[
+            Container(
+              width: 6,
+              height: 6,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: effectiveColor,
+                boxShadow: [
+                  BoxShadow(
+                    color: effectiveColor.withOpacity(0.9),
+                    blurRadius: 6,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 6),
+          ],
+          Text(
+            label,
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 10,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 0.8,
+              color: effectiveColor,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

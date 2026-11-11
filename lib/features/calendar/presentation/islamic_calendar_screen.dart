@@ -243,8 +243,9 @@ class _IslamicCalendarScreenState extends State<IslamicCalendarScreen> {
           ),
         ],
       ),
-      body: Stack(
-        children: [
+      body: AtmosphericBackground(
+        child: Stack(
+          children: [
           // Ambient Glows
           Positioned(
             top: 40,
@@ -459,7 +460,8 @@ class _IslamicCalendarScreenState extends State<IslamicCalendarScreen> {
                 ),
         ],
       ),
-    );
+    ),
+  );
   }
 }
 

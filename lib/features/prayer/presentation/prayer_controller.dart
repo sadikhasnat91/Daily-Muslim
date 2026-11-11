@@ -137,12 +137,16 @@ String nextPrayerCountdown(List<PrayerTimeEntry> entries, DateTime now) {
       final diff = entry.time.difference(now);
       final hours = diff.inHours;
       final minutes = diff.inMinutes.remainder(60);
-      return '${entry.name} in ${hours}h ${minutes}m';
+      final seconds = diff.inSeconds.remainder(60);
+      final hStr = hours > 0 ? '${hours}h ' : '';
+      return '${entry.name} in $hStr${minutes}m ${seconds}s';
     }
   }
   final firstTomorrow = entries.first.time.add(const Duration(days: 1));
   final diff = firstTomorrow.difference(now);
   final hours = diff.inHours;
   final minutes = diff.inMinutes.remainder(60);
-  return '${entries.first.name} in ${hours}h ${minutes}m';
+  final seconds = diff.inSeconds.remainder(60);
+  final hStr = hours > 0 ? '${hours}h ' : '';
+  return '${entries.first.name} in $hStr${minutes}m ${seconds}s';
 }

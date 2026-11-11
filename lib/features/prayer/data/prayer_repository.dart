@@ -42,9 +42,8 @@ class PrayerRepository {
     final settings = raw == null
         ? AppSettings.defaults
         : AppSettings.fromJson(raw);
-    // Fire-and-forget: scheduling failures shouldn't block prayer time
-    // rendering.
-    AzanNotificationService.instance.scheduleForDay(data, settings);
+    // Fire-and-forget: multi-day rolling notifications schedule
+    AzanNotificationService.instance.scheduleWeekly(settings);
   }
 
   static PrayerDayData calculatePrayerDayForSettings({
@@ -65,9 +64,9 @@ class PrayerRepository {
     }
 
     final coords = Coordinates(lat, lng);
-    final methodId = isBangladesh ? 1 : settings.prayerMethod;
+    final methodId = settings.prayerMethod > 0 ? settings.prayerMethod : (isBangladesh ? 1 : 3);
     final params = _calculationParametersFor(methodId);
-    final isHanafi = isBangladesh ? true : (settings.madhhab.toLowerCase() == 'hanafi');
+    final isHanafi = settings.madhhab.trim().toLowerCase() != 'shafi';
     final adjusted = params.copyWith(
       madhab: isHanafi ? Madhab.hanafi : Madhab.shafi,
       highLatitudeRule: HighLatitudeRule.middleOfTheNight,

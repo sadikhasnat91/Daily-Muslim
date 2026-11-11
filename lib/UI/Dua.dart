@@ -126,8 +126,9 @@ class _DuasScreenState extends State<DuasScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: Stack(
-        children: [
+      body: AtmosphericBackground(
+        child: Stack(
+          children: [
           // Ambient Glows
           Positioned(
             top: -80,
@@ -274,7 +275,8 @@ class _DuasScreenState extends State<DuasScreen> {
             ),
         ],
       ),
-    );
+    ),
+  );
   }
 }
 

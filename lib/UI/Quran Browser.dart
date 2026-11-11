@@ -258,21 +258,10 @@ class _QuranBrowserScreenState extends State<QuranBrowserScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: Stack(
-        children: [
-          // Background Glow Orbs
-          Positioned(
-            top: -60,
-            right: -60,
-            child: GlowOrb(color: AppColors.primary, radius: 240, opacity: 0.12),
-          ),
-          Positioned(
-            bottom: 100,
-            left: -80,
-            child: GlowOrb(color: AppColors.gold, radius: 220, opacity: 0.08),
-          ),
-
-          Positioned.fill(
+      body: AtmosphericBackground(
+        child: Stack(
+          children: [
+            Positioned.fill(
             child: SingleChildScrollView(
               padding: EdgeInsets.fromLTRB(
                 isDesktop ? AppSpacing.marginDesktop : AppSpacing.marginMobile,
@@ -356,8 +345,9 @@ class _QuranBrowserScreenState extends State<QuranBrowserScreen> {
             ),
         ],
       ),
-    );
-  }
+    ),
+  );
+}
 }
 
 class _QuranHeader extends StatelessWidget {

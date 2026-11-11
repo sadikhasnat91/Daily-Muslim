@@ -629,3 +629,19 @@ BdDistrict? findBdDistrict(String query) {
   return null;
 }
 
+/// Finds the geographically closest Bangladesh district to the given coordinates.
+BdDistrict findClosestBdDistrict(double lat, double lng) {
+  BdDistrict closest = kAllBangladeshDistricts.first;
+  double minDistanceSq = double.infinity;
+  for (final d in kAllBangladeshDistricts) {
+    final dLat = lat - d.latitude;
+    final dLng = lng - d.longitude;
+    final distSq = (dLat * dLat) + (dLng * dLng);
+    if (distSq < minDistanceSq) {
+      minDistanceSq = distSq;
+      closest = d;
+    }
+  }
+  return closest;
+}
+

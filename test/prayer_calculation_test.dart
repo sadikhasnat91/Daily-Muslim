@@ -246,5 +246,42 @@ void main() {
       // In Sylhet, Fajr is earlier than in Rajshahi by ~12-14 minutes
       expect(sylhetFajr.isBefore(rajshahiFajr), isTrue);
     });
+
+    test('should differentiate between Hanafi and Shafi Asr calculation', () {
+      final shafiDay = PrayerRepository.calculatePrayerDayForSettings(
+        date: DateTime(2026, 6, 21),
+        settings: AppSettings.defaults.copyWith(
+          madhhab: 'Shafi',
+        ),
+      );
+
+      final hanafiDay = PrayerRepository.calculatePrayerDayForSettings(
+        date: DateTime(2026, 6, 21),
+        settings: AppSettings.defaults.copyWith(
+          madhhab: 'Hanafi',
+        ),
+      );
+
+      final shafiAsr = shafiDay.prayers.firstWhere((p) => p.name == 'Asr').time;
+      final hanafiAsr = hanafiDay.prayers.firstWhere((p) => p.name == 'Asr').time;
+
+      // Hanafi Asr (shadow length 2) starts significantly later than Shafi Asr (shadow length 1)
+      expect(hanafiAsr.isAfter(shafiAsr), isTrue);
+      expect(hanafiAsr.difference(shafiAsr).inMinutes, greaterThan(30));
+    });
+
+    test('should find geographically closest district accurately', () {
+      // Coordinates near Chittagong (22.3569, 91.7832)
+      final closest = findClosestBdDistrict(22.36, 91.80);
+      expect(closest.nameEn, equals('Chattogram'));
+
+      // Coordinates near Sylhet (24.8949, 91.8687)
+      final sylhet = findClosestBdDistrict(24.90, 91.87);
+      expect(sylhet.nameEn, equals('Sylhet'));
+
+      // Coordinates near Khulna (22.8456, 89.5403)
+      final khulna = findClosestBdDistrict(22.85, 89.53);
+      expect(khulna.nameEn, equals('Khulna'));
+    });
   });
 }

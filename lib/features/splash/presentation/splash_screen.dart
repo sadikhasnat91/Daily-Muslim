@@ -84,30 +84,11 @@ class _SplashScreenState extends State<SplashScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: Stack(
-        children: [
-          // Ambient Glow Orbs
-          Positioned(
-            top: -100,
-            right: -60,
-            child: GlowOrb(
-              color: AppColors.primary,
-              radius: 260,
-              opacity: 0.18,
-            ),
-          ),
-          Positioned(
-            bottom: -80,
-            left: -80,
-            child: GlowOrb(
-              color: AppColors.gold,
-              radius: 240,
-              opacity: 0.12,
-            ),
-          ),
-
-          // Center Animated 3D Content
-          Positioned.fill(
+      body: AtmosphericBackground(
+        child: Stack(
+          children: [
+            // Center Animated 3D Content
+            Positioned.fill(
             child: SingleChildScrollView(
               physics: const ClampingScrollPhysics(),
               child: ConstrainedBox(
@@ -273,6 +254,7 @@ class _SplashScreenState extends State<SplashScreen>
           ),
         ],
       ),
-    );
+    ),
+  );
   }
 }

@@ -29,8 +29,9 @@ class NotificationsScreen extends ConsumerWidget {
           ),
         ),
       ),
-      body: Stack(
-        children: [
+      body: AtmosphericBackground(
+        child: Stack(
+          children: [
           // Ambient Glow
           Positioned(
             top: 20,
@@ -227,6 +228,7 @@ class NotificationsScreen extends ConsumerWidget {
           ),
         ],
       ),
-    );
+    ),
+  );
   }
 }

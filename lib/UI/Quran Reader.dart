@@ -213,89 +213,79 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
             );
           }
 
-          return Stack(
-            children: [
-              // Ambient Glow Orbs
-              Positioned(
-                top: -80,
-                right: -60,
-                child: GlowOrb(color: AppColors.primary, radius: 260, opacity: 0.12),
-              ),
-              Positioned(
-                bottom: 120,
-                left: -80,
-                child: GlowOrb(color: AppColors.gold, radius: 220, opacity: 0.08),
-              ),
-
-              // Main Ayahs List
-              Positioned.fill(
-                child: SingleChildScrollView(
-                  padding: EdgeInsets.fromLTRB(
-                    horizontalMargin,
-                    100,
-                    horizontalMargin,
-                    180,
-                  ),
-                  child: Center(
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 860),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          if (detail.surah.id != 9) const _Bismillah(),
-                          Text(
-                            detail.englishNameTranslation,
-                            textAlign: TextAlign.center,
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.onSurfaceVariant,
+          return AtmosphericBackground(
+            child: Stack(
+              children: [
+                // Main Ayahs List
+                Positioned.fill(
+                  child: SingleChildScrollView(
+                    padding: EdgeInsets.fromLTRB(
+                      horizontalMargin,
+                      100,
+                      horizontalMargin,
+                      180,
+                    ),
+                    child: Center(
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 860),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            if (detail.surah.id != 9) const _Bismillah(),
+                            Text(
+                              detail.englishNameTranslation,
+                              textAlign: TextAlign.center,
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.onSurfaceVariant,
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 28),
-                          for (final ayah in detail.ayahs) ...[
-                            _AyahCard(
-                              surah: detail.surah,
-                              ayah: ayah,
-                              isCurrent: ayah.numberInSurah == _currentAyah,
-                              onTap: () => _playAyah(ayah.numberInSurah),
-                            ),
-                            const SizedBox(height: 16),
+                            const SizedBox(height: 28),
+                            for (final ayah in detail.ayahs) ...[
+                              _AyahCard(
+                                surah: detail.surah,
+                                ayah: ayah,
+                                isCurrent: ayah.numberInSurah == _currentAyah,
+                                onTap: () => _playAyah(ayah.numberInSurah),
+                              ),
+                              const SizedBox(height: 16),
+                            ],
                           ],
-                        ],
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
 
-              // 3D Glass Top Header
-              Positioned(
-                top: 0,
-                left: 0,
-                right: 0,
-                child: _TopHeader(detail: detail, currentAyah: _currentAyah),
-              ),
-
-              // 3D Floating Audio Dock
-              Positioned(
-                left: 0,
-                right: 0,
-                bottom: 24,
-                child: _FloatingAudioPlayer(
-                  player: _player,
-                  detail: detail,
-                  audioReady: _audioReady,
-                  playbackSpeed: _playbackSpeed,
-                  loopMode: _loopMode,
-                  onPlayPause: _togglePlayPause,
-                  onSeekBack: () => _seekBy(const Duration(seconds: -15)),
-                  onSeekForward: () => _seekBy(const Duration(seconds: 15)),
-                  onSetSpeed: _setPlaybackSpeed,
-                  onSetLoopMode: _setLoopMode,
+                // 3D Glass Top Header
+                Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  child: _TopHeader(detail: detail, currentAyah: _currentAyah),
                 ),
-              ),
-            ],
+
+                // 3D Floating Audio Dock
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: 24,
+                  child: _FloatingAudioPlayer(
+                    player: _player,
+                    detail: detail,
+                    audioReady: _audioReady,
+                    playbackSpeed: _playbackSpeed,
+                    loopMode: _loopMode,
+                    onPlayPause: _togglePlayPause,
+                    onSeekBack: () => _seekBy(const Duration(seconds: -15)),
+                    onSeekForward: () => _seekBy(const Duration(seconds: 15)),
+                    onSetSpeed: _setPlaybackSpeed,
+                    onSetLoopMode: _setLoopMode,
+                  ),
+                ),
+              ],
+            ),
           );
         },
       ),

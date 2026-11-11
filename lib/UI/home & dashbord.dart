@@ -74,6 +74,7 @@ class ActivePrayerState {
     required this.targetTime,
     required this.subtitle,
     required this.remaining,
+    this.progressRatio = 0.0,
   });
 
   final bool isCurrent;
@@ -81,6 +82,7 @@ class ActivePrayerState {
   final DateTime targetTime;
   final String subtitle;
   final Duration remaining;
+  final double progressRatio;
 }
 
 ActivePrayerState resolveActivePrayerState(
@@ -105,13 +107,19 @@ ActivePrayerState resolveActivePrayerState(
       final rem = window.end.difference(now);
       final h = rem.inHours;
       final m = rem.inMinutes.remainder(60);
+      final s = rem.inSeconds.remainder(60);
+      final totalSec = window.end.difference(window.start).inSeconds;
+      final elapsedSec = now.difference(window.start).inSeconds;
+      final ratio = totalSec > 0 ? (elapsedSec / totalSec).clamp(0.0, 1.0) : 0.0;
+      final hStr = h > 0 ? '${h}h ' : '';
       return ActivePrayerState(
         isCurrent: true,
         name: window.name,
         targetTime: window.end,
         subtitle:
-            '${DateFormat('h:mm a').format(window.start)} → ${DateFormat('h:mm a').format(window.end)} • Ends in ${h}h ${m}m',
+            '${DateFormat('h:mm a').format(window.start)} → ${DateFormat('h:mm a').format(window.end)} • Ends in $hStr${m}m ${s}s',
         remaining: rem,
+        progressRatio: ratio,
       );
     }
   }
@@ -121,13 +129,16 @@ ActivePrayerState resolveActivePrayerState(
       final rem = window.start.difference(now);
       final h = rem.inHours;
       final m = rem.inMinutes.remainder(60);
+      final s = rem.inSeconds.remainder(60);
+      final hStr = h > 0 ? '${h}h ' : '';
       return ActivePrayerState(
         isCurrent: false,
         name: window.name,
         targetTime: window.start,
         subtitle:
-            'Starts at ${DateFormat('h:mm a').format(window.start)} • In ${h}h ${m}m',
+            'Starts at ${DateFormat('h:mm a').format(window.start)} • In $hStr${m}m ${s}s',
         remaining: rem,
+        progressRatio: 0.0,
       );
     }
   }
@@ -136,13 +147,16 @@ ActivePrayerState resolveActivePrayerState(
   final rem = nextFajr.difference(now);
   final h = rem.inHours;
   final m = rem.inMinutes.remainder(60);
+  final s = rem.inSeconds.remainder(60);
+  final hStr = h > 0 ? '${h}h ' : '';
   return ActivePrayerState(
     isCurrent: false,
     name: 'Fajr',
     targetTime: nextFajr,
     subtitle:
-        'Starts tomorrow at ${DateFormat('h:mm a').format(nextFajr)} • In ${h}h ${m}m',
+        'Starts tomorrow at ${DateFormat('h:mm a').format(nextFajr)} • In $hStr${m}m ${s}s',
     remaining: rem,
+    progressRatio: 0.0,
   );
 }
 
@@ -173,7 +187,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       if (mounted) _ringController.forward();
     });
     _loadPrayerTimes();
-    _clockTimer = Timer.periodic(const Duration(seconds: 15), (_) {
+    _clockTimer = Timer.periodic(const Duration(seconds: 1), (_) {
       if (mounted) {
         _refreshDailyIfNeeded();
         setState(() {});
@@ -254,86 +268,86 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: Stack(
-        children: [
-          // Ambient Glow Orbs for 3D depth
-          Positioned(
-            top: -100,
-            right: -80,
-            child: GlowOrb(color: AppColors.primary, radius: 280, opacity: 0.16),
-          ),
-          Positioned(
-            top: 300,
-            left: -120,
-            child: GlowOrb(color: AppColors.gold, radius: 240, opacity: 0.08),
-          ),
-          Positioned(
-            bottom: -60,
-            right: -60,
-            child: GlowOrb(color: AppColors.primary, radius: 220, opacity: 0.12),
-          ),
-
-          // Main Scrollable Content
-          Positioned.fill(
-            child: SingleChildScrollView(
-              padding: EdgeInsets.fromLTRB(
-                AppResponsive.horizontalMargin(context),
-                94,
-                AppResponsive.horizontalMargin(context),
-                AppResponsive.bottomScrollPad(context),
-              ),
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 1200),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      _DateHeader(dayData: _prayerDayData, now: now),
-                      const SizedBox(height: 20),
-                      _NextPrayerCard(
-                        isWide: isWide,
-                        progress: _ringProgress,
-                        now: now,
-                        prayerTimes: prayerTimes,
-                        sunrise: _prayerDayData?.sunrise,
-                      ),
-                      const SizedBox(height: 24),
-                      _TodayPrayersList(
-                        prayerTimes: prayerTimes,
-                        now: now,
-                        sunrise: _prayerDayData?.sunrise,
-                      ),
-                      const SizedBox(height: 24),
-                      const _QuickActionsGrid(),
-                      const SizedBox(height: 24),
-                      _DualBentoCards(isWide: isWide),
-                    ],
+      body: AtmosphericBackground(
+        child: Stack(
+          children: [
+            // Main Scrollable Content
+            Positioned.fill(
+              child: SingleChildScrollView(
+                padding: EdgeInsets.fromLTRB(
+                  AppResponsive.horizontalMargin(context),
+                  94,
+                  AppResponsive.horizontalMargin(context),
+                  AppResponsive.bottomScrollPad(context),
+                ),
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 1200),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Entrance3D(
+                          delay: const Duration(milliseconds: 50),
+                          child: _DateHeader(dayData: _prayerDayData, now: now),
+                        ),
+                        const SizedBox(height: 20),
+                        Entrance3D(
+                          delay: const Duration(milliseconds: 150),
+                          child: _NextPrayerCard(
+                            isWide: isWide,
+                            progress: _ringProgress,
+                            now: now,
+                            prayerTimes: prayerTimes,
+                            sunrise: _prayerDayData?.sunrise,
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        Entrance3D(
+                          delay: const Duration(milliseconds: 250),
+                          child: _TodayPrayersList(
+                            prayerTimes: prayerTimes,
+                            now: now,
+                            sunrise: _prayerDayData?.sunrise,
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        const Entrance3D(
+                          delay: Duration(milliseconds: 350),
+                          child: _QuickActionsGrid(),
+                        ),
+                        const SizedBox(height: 24),
+                        Entrance3D(
+                          delay: const Duration(milliseconds: 450),
+                          child: _DualBentoCards(isWide: isWide),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
 
-          // Floating Top App Bar
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: SharedTopAppBar(
-              profileName: profileName,
-              profileImageUrl: profileImageUrl,
-            ),
-          ),
-
-          // Floating Bottom Navigation Dock (Mobile)
-          if (!isWide)
-            const Positioned(
-              bottom: 0,
+            // Floating Top App Bar
+            Positioned(
+              top: 0,
               left: 0,
               right: 0,
-              child: SharedBottomNavBar(active: NavTab.home),
+              child: SharedTopAppBar(
+                profileName: profileName,
+                profileImageUrl: profileImageUrl,
+              ),
             ),
-        ],
+
+            // Floating Bottom Navigation Dock (Mobile)
+            if (!isWide)
+              const Positioned(
+                bottom: 0,
+                left: 0,
+                right: 0,
+                child: SharedBottomNavBar(active: NavTab.home),
+              ),
+          ],
+        ),
       ),
     );
   }
@@ -497,51 +511,10 @@ class _NextPrayerCard extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        // 3D Status Pill (Current vs Next Waqt)
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-          decoration: BoxDecoration(
-            color: activeState.isCurrent
-                ? AppColors.primary.withOpacity(0.18)
-                : AppColors.gold.withOpacity(0.16),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: activeState.isCurrent
-                  ? AppColors.primary.withOpacity(0.4)
-                  : AppColors.gold.withOpacity(0.35),
-              width: 1,
-            ),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 7,
-                height: 7,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: activeState.isCurrent ? AppColors.primary : AppColors.gold,
-                  boxShadow: [
-                    BoxShadow(
-                      color: (activeState.isCurrent ? AppColors.primary : AppColors.gold)
-                          .withOpacity(0.8),
-                      blurRadius: 6,
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 7),
-              Text(
-                activeState.isCurrent ? 'CURRENT WAQT' : 'NEXT WAQT',
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 11,
-                  letterSpacing: 0.8,
-                  fontWeight: FontWeight.w800,
-                  color: activeState.isCurrent ? AppColors.primary : AppColors.gold,
-                ),
-              ),
-            ],
-          ),
+        // 3D Status Holographic Badge
+        HoloBadge(
+          label: activeState.isCurrent ? 'CURRENT WAQT' : 'NEXT WAQT',
+          isGold: !activeState.isCurrent,
         ),
         const SizedBox(height: 12),
 
@@ -583,9 +556,12 @@ class _NextPrayerCard extends StatelessWidget {
       child: AnimatedBuilder(
         animation: progress,
         builder: (context, _) {
+          final ringProgress = activeState.progressRatio > 0
+              ? activeState.progressRatio
+              : progress.value;
           return CustomPaint(
             painter: _ModernProgressRingPainter(
-              progress: progress.value,
+              progress: ringProgress,
               isCurrent: activeState.isCurrent,
             ),
             child: Center(
@@ -595,10 +571,10 @@ class _NextPrayerCard extends StatelessWidget {
                   FittedBox(
                     fit: BoxFit.scaleDown,
                     child: Text(
-                      '${remaining.inHours.toString().padLeft(2, '0')}:${remaining.inMinutes.remainder(60).toString().padLeft(2, '0')}',
+                      '${remaining.inHours.toString().padLeft(2, '0')}:${remaining.inMinutes.remainder(60).toString().padLeft(2, '0')}:${remaining.inSeconds.remainder(60).toString().padLeft(2, '0')}',
                       style: GoogleFonts.plusJakartaSans(
-                        fontSize: AppResponsive.scaleFont(context, min: 20, max: 32),
-                        fontWeight: FontWeight.w800,
+                        fontSize: AppResponsive.scaleFont(context, min: 18, max: 28),
+                        fontWeight: FontWeight.w900,
                         letterSpacing: -0.5,
                         color: AppColors.onBackground,
                       ),
@@ -661,29 +637,35 @@ class _ModernProgressRingPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
-    final radius = (size.shortestSide - 10) / 2;
+    final radius = (size.shortestSide - 14) / 2;
+    final activeColor = isCurrent ? AppColors.primary : AppColors.gold;
+
+    // Atmospheric outer soft halo
+    final auraPaint = Paint()
+      ..color = activeColor.withOpacity(0.04)
+      ..style = PaintingStyle.fill;
+    canvas.drawCircle(center, radius + 7, auraPaint);
 
     // Track
     final trackPaint = Paint()
-      ..color = Colors.white.withOpacity(0.08)
+      ..color = Colors.white.withOpacity(0.07)
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 7;
+      ..strokeWidth = 7.5;
 
     canvas.drawCircle(center, radius, trackPaint);
 
     // Glowing Progress Arc
-    final activeColor = isCurrent ? AppColors.primary : AppColors.gold;
     final progressPaint = Paint()
       ..shader = SweepGradient(
         colors: [
-          activeColor.withOpacity(0.2),
+          activeColor.withOpacity(0.15),
           activeColor,
         ],
         stops: const [0.0, 1.0],
         transform: const GradientRotation(-math.pi / 2),
       ).createShader(Rect.fromCircle(center: center, radius: radius))
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 7
+      ..strokeWidth = 7.5
       ..strokeCap = StrokeCap.round;
 
     const startAngle = -math.pi / 2;
@@ -695,6 +677,23 @@ class _ModernProgressRingPainter extends CustomPainter {
       false,
       progressPaint,
     );
+
+    // Glowing Head Bead at the tip
+    if (progress > 0.02) {
+      final beadAngle = startAngle + sweepAngle;
+      final beadPos = Offset(
+        center.dx + radius * math.cos(beadAngle),
+        center.dy + radius * math.sin(beadAngle),
+      );
+
+      final beadGlow = Paint()
+        ..color = activeColor.withOpacity(0.65)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6);
+      canvas.drawCircle(beadPos, 6.5, beadGlow);
+
+      final beadCore = Paint()..color = Colors.white;
+      canvas.drawCircle(beadPos, 3.2, beadCore);
+    }
   }
 
   @override
@@ -764,17 +763,28 @@ class _QuickActionButton extends StatelessWidget {
           gradient: const LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [Color(0xFF16231C), Color(0xFF0F1713)],
+            colors: [Color(0xFF192C23), Color(0xFF0F1A14)],
           ),
           border: Border.all(
-            color: Colors.white.withOpacity(0.08),
-            width: 1,
+            color: accentColor.withOpacity(0.28),
+            width: 1.2,
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.35),
-              offset: const Offset(0, 6),
-              blurRadius: 14,
+              color: Colors.black.withOpacity(0.5),
+              offset: const Offset(0, 8),
+              blurRadius: 18,
+              spreadRadius: -2,
+            ),
+            BoxShadow(
+              color: accentColor.withOpacity(0.18),
+              offset: const Offset(0, 2),
+              blurRadius: 16,
+            ),
+            BoxShadow(
+              color: Colors.white.withOpacity(0.12),
+              offset: const Offset(0, -1),
+              blurRadius: 0,
             ),
           ],
         ),
@@ -976,7 +986,7 @@ class _TodayPrayersList extends StatelessWidget {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          'until ${DateFormat('h:mm a').format(endTime)}',
+                          'ends ${DateFormat('h:mm a').format(endTime)}',
                           style: GoogleFonts.plusJakartaSans(
                             fontSize: 11,
                             fontWeight: FontWeight.w500,

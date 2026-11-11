@@ -91,106 +91,90 @@ class _QiblaScreenState extends ConsumerState<QiblaScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: Stack(
-        children: [
-          // Ambient Glows
-          Positioned(
-            top: 60,
-            right: -60,
-            child: GlowOrb(
-              color: isAligned ? AppColors.primary : AppColors.gold,
-              radius: 260,
-              opacity: isAligned ? 0.22 : 0.12,
-            ),
-          ),
-          Positioned(
-            bottom: 40,
-            left: -80,
-            child: GlowOrb(color: AppColors.primary, radius: 220, opacity: 0.1),
-          ),
-
-          Positioned.fill(
-            child: SingleChildScrollView(
-              padding: EdgeInsets.fromLTRB(
-                AppResponsive.horizontalMargin(context),
-                92,
-                AppResponsive.horizontalMargin(context),
-                AppResponsive.bottomScrollPad(context),
-              ),
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 800),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      const SizedBox(height: 12),
-                      Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                            decoration: BoxDecoration(
-                              color: isAligned
-                                  ? AppColors.primary.withOpacity(0.18)
-                                  : AppColors.gold.withOpacity(0.18),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Text(
-                              isAligned ? 'ALIGNED WITH MAKKAH' : 'QIBLA COMPASS',
-                              style: GoogleFonts.plusJakartaSans(
-                                fontSize: 10,
-                                letterSpacing: 1.0,
-                                fontWeight: FontWeight.w800,
+      body: AtmosphericBackground(
+        child: Stack(
+          children: [
+            Positioned.fill(
+              child: SingleChildScrollView(
+                padding: EdgeInsets.fromLTRB(
+                  AppResponsive.horizontalMargin(context),
+                  92,
+                  AppResponsive.horizontalMargin(context),
+                  AppResponsive.bottomScrollPad(context),
+                ),
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 800),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        const SizedBox(height: 12),
+                        Entrance3D(
+                          delay: const Duration(milliseconds: 50),
+                          child: Row(
+                            children: [
+                              HoloBadge(
+                                label: isAligned ? 'ALIGNED WITH MAKKAH' : 'QIBLA COMPASS',
                                 color: isAligned ? AppColors.primary : AppColors.gold,
                               ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Entrance3D(
+                          delay: const Duration(milliseconds: 100),
+                          child: Text(
+                            'Qibla Direction',
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: AppResponsive.scaleFont(context, min: 28, max: 40),
+                              letterSpacing: -1.0,
+                              fontWeight: FontWeight.w900,
+                              color: AppColors.onBackground,
                             ),
                           ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Qibla Direction',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: AppResponsive.scaleFont(context, min: 28, max: 40),
-                          letterSpacing: -1.0,
-                          fontWeight: FontWeight.w900,
-                          color: AppColors.onBackground,
                         ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        hasLocation
-                            ? 'Facing Holy Kaaba from ${settings.city}, ${settings.country}'
-                            : 'Set your location in settings for exact millimeter bearing.',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 14,
-                          color: AppColors.onSurfaceVariant,
-                        ),
-                      ),
-                      const SizedBox(height: 36),
-
-                      // 3D Compass Instrument
-                      if (_checkingPermission)
-                        const Center(
-                          child: Padding(
-                            padding: EdgeInsets.all(40),
-                            child: CircularProgressIndicator(color: AppColors.primary),
+                        const SizedBox(height: 4),
+                        Entrance3D(
+                          delay: const Duration(milliseconds: 150),
+                          child: Text(
+                            hasLocation
+                                ? 'Facing Holy Kaaba from ${settings.city}, ${settings.country}'
+                                : 'Set your location in settings for exact millimeter bearing.',
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 14,
+                              color: AppColors.onSurfaceVariant,
+                            ),
                           ),
-                        )
-                      else
-                        _buildCompass(
-                          qiblaBearing: qiblaBearing,
-                          dynamic: _hasCompassSensor,
-                          isAligned: isAligned,
+                        ),
+                        const SizedBox(height: 36),
+
+                        // 3D Compass Instrument
+                        Entrance3D(
+                          delay: const Duration(milliseconds: 250),
+                          child: _checkingPermission
+                              ? const Center(
+                                  child: Padding(
+                                    padding: EdgeInsets.all(40),
+                                    child: CircularProgressIndicator(color: AppColors.primary),
+                                  ),
+                                )
+                              : _buildCompass(
+                                  qiblaBearing: qiblaBearing,
+                                  dynamic: _hasCompassSensor,
+                                  isAligned: isAligned,
+                                ),
                         ),
 
-                      const SizedBox(height: 36),
+                        const SizedBox(height: 36),
 
-                      // 3D Bearing Info Card
-                      Card3D(
-                        borderRadius: 24,
-                        padding: const EdgeInsets.all(24),
-                        glowColor: isAligned ? AppColors.primary : null,
-                        child: Column(
+                        // 3D Bearing Info Card
+                        Entrance3D(
+                          delay: const Duration(milliseconds: 350),
+                          child: Card3D(
+                            borderRadius: 24,
+                            padding: const EdgeInsets.all(24),
+                            glowColor: isAligned ? AppColors.primary : null,
+                            child: Column(
                           children: [
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -297,12 +281,13 @@ class _QiblaScreenState extends ConsumerState<QiblaScreen> {
                           ],
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
             ),
           ),
+        ),
 
           // Shared Top Bar
           Positioned(
@@ -348,7 +333,8 @@ class _QiblaScreenState extends ConsumerState<QiblaScreen> {
             ),
         ],
       ),
-    );
+    ),
+  );
   }
 
   Widget _buildCompass({

@@ -8,15 +8,78 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:islam/app/app_routes.dart';
+import 'package:islam/core/notifications/azan_notification_service.dart';
 import 'package:islam/core/ui/app_theme_tokens.dart';
 import 'package:islam/features/location/domain/country_option.dart';
+import 'package:islam/features/location/presentation/district_selection_sheet.dart';
 import 'package:islam/features/settings/presentation/settings_controller.dart';
 
-class SettingsScreen extends ConsumerWidget {
+class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<SettingsScreen> createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends ConsumerState<SettingsScreen> {
+  bool _detectingGps = false;
+  bool _isPlayingAudio = false;
+
+  @override
+  void dispose() {
+    AzanNotificationService.instance.stopAdhanAudio();
+    super.dispose();
+  }
+
+  Future<void> _handleGpsDetection() async {
+    setState(() => _detectingGps = true);
+    final success = await ref
+        .read(settingsControllerProvider.notifier)
+        .detectAndApplyGpsLocation();
+    if (!mounted) return;
+    setState(() => _detectingGps = false);
+
+    final settings = ref.read(settingsControllerProvider);
+    if (success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'GPS coordinates updated: ${settings.city} (${settings.latitude.toStringAsFixed(3)}°, ${settings.longitude.toStringAsFixed(3)}°)',
+            style: GoogleFonts.plusJakartaSans(color: Colors.white),
+          ),
+          backgroundColor: AppColors.primary,
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Unable to get GPS fix. Please ensure location services and permissions are enabled.',
+            style: GoogleFonts.plusJakartaSans(color: Colors.white),
+          ),
+          backgroundColor: AppColors.error,
+        ),
+      );
+    }
+  }
+
+  Future<void> _toggleAdhanAudio() async {
+    if (_isPlayingAudio) {
+      await AzanNotificationService.instance.stopAdhanAudio();
+      if (mounted) setState(() => _isPlayingAudio = false);
+    } else {
+      setState(() => _isPlayingAudio = true);
+      await AzanNotificationService.instance.playAdhanAudio();
+      if (mounted) {
+        setState(() {
+          _isPlayingAudio = AzanNotificationService.instance.isPlayingAdhan;
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final settings = ref.watch(settingsControllerProvider);
 
     return Scaffold(
@@ -32,8 +95,9 @@ class SettingsScreen extends ConsumerWidget {
           ),
         ),
       ),
-      body: Stack(
-        children: [
+      body: AtmosphericBackground(
+        child: Stack(
+          children: [
           // Background Glows
           Positioned(
             top: 20,
@@ -135,9 +199,39 @@ class SettingsScreen extends ConsumerWidget {
                       child: Column(
                         children: [
                           _SettingsTile(
+                            icon: Icons.my_location_rounded,
+                            title: 'Auto-detect Location (GPS)',
+                            subtitle: _detectingGps
+                                ? 'Connecting to GPS satellites...'
+                                : 'Tap to sync exact coordinates using device GPS',
+                            trailing: _detectingGps
+                                ? const SizedBox(
+                                    width: 18,
+                                    height: 18,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: AppColors.primary,
+                                    ),
+                                  )
+                                : const Icon(
+                                    Icons.gps_fixed_rounded,
+                                    size: 18,
+                                    color: AppColors.primary,
+                                  ),
+                            onTap: _detectingGps ? null : _handleGpsDetection,
+                          ),
+                          _divider(),
+                          _SettingsTile(
+                            icon: Icons.map_rounded,
+                            title: 'Select District (Bangladesh)',
+                            subtitle: 'Choose from all 64 BD districts',
+                            onTap: () => showDistrictPicker(context),
+                          ),
+                          _divider(),
+                          _SettingsTile(
                             icon: Icons.location_city_rounded,
                             title: 'City',
-                            subtitle: settings.city,
+                            subtitle: '${settings.city} (${settings.latitude.toStringAsFixed(3)}°, ${settings.longitude.toStringAsFixed(3)}°)',
                             onTap: () => _prompt(
                               context,
                               title: 'Update City',
@@ -418,6 +512,59 @@ class SettingsScreen extends ConsumerWidget {
                                 .read(settingsControllerProvider.notifier)
                                 .setSilentMode(value),
                           ),
+                          _divider(),
+                          _SettingsTile(
+                            icon: Icons.notifications_active_rounded,
+                            title: 'Test Notification & Sound',
+                            subtitle: 'Trigger a sample prayer alert immediately',
+                            trailing: const Icon(
+                              Icons.send_rounded,
+                              size: 18,
+                              color: AppColors.primary,
+                            ),
+                            onTap: () async {
+                              await ref
+                                  .read(settingsControllerProvider.notifier)
+                                  .sendTestNotification(testAzan: settings.azanEnabled);
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      settings.azanEnabled
+                                          ? 'Adhan alarm test triggered! Check notifications.'
+                                          : 'Standard notification test triggered! Check notifications.',
+                                      style: GoogleFonts.plusJakartaSans(
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                    backgroundColor: AppColors.primary,
+                                  ),
+                                );
+                              }
+                            },
+                          ),
+                          _divider(),
+                          _SettingsTile(
+                            icon: _isPlayingAudio
+                                ? Icons.stop_circle_rounded
+                                : Icons.volume_up_rounded,
+                            title: _isPlayingAudio
+                                ? 'Stop Adhan Audio'
+                                : 'Preview Adhan Audio',
+                            subtitle: _isPlayingAudio
+                                ? 'Playing full Adhan audio...'
+                                : 'Listen to the full Adhan call to prayer',
+                            trailing: Icon(
+                              _isPlayingAudio
+                                  ? Icons.stop_rounded
+                                  : Icons.play_arrow_rounded,
+                              size: 22,
+                              color: _isPlayingAudio
+                                  ? AppColors.error
+                                  : AppColors.primary,
+                            ),
+                            onTap: _toggleAdhanAudio,
+                          ),
                         ],
                       ),
                     ),
@@ -466,7 +613,8 @@ class SettingsScreen extends ConsumerWidget {
           ),
         ],
       ),
-    );
+    ),
+  );
   }
 
   static Widget _divider() => Divider(
@@ -562,12 +710,14 @@ class _SettingsTile extends StatelessWidget {
   final String title;
   final String subtitle;
   final VoidCallback? onTap;
+  final Widget? trailing;
 
   const _SettingsTile({
     required this.icon,
     required this.title,
     required this.subtitle,
     this.onTap,
+    this.trailing,
   });
 
   @override
@@ -598,13 +748,14 @@ class _SettingsTile extends StatelessWidget {
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
       ),
-      trailing: onTap != null
-          ? const Icon(
-              Icons.chevron_right_rounded,
-              size: 20,
-              color: AppColors.onSurfaceVariant,
-            )
-          : null,
+      trailing: trailing ??
+          (onTap != null
+              ? const Icon(
+                  Icons.chevron_right_rounded,
+                  size: 20,
+                  color: AppColors.onSurfaceVariant,
+                )
+              : null),
       onTap: onTap,
     );
   }

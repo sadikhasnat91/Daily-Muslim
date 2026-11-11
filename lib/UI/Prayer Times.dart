@@ -194,75 +194,74 @@ class _PrayerTimesScreenState extends ConsumerState<PrayerTimesScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: Stack(
-        children: [
-          // Ambient Glows
-          Positioned(
-            top: -80,
-            right: -60,
-            child: GlowOrb(color: AppColors.primary, radius: 260, opacity: 0.14),
-          ),
-          Positioned(
-            bottom: 120,
-            left: -80,
-            child: GlowOrb(color: AppColors.gold, radius: 220, opacity: 0.08),
-          ),
-
-          Positioned.fill(
-            child: SingleChildScrollView(
-              padding: EdgeInsets.fromLTRB(
-                AppResponsive.horizontalMargin(context),
-                92,
-                AppResponsive.horizontalMargin(context),
-                AppResponsive.bottomScrollPad(context),
-              ),
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 1200),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      _DateSummarySection(
-                        isWide: isWide,
-                        now: _now,
-                        dayData: dayData,
-                        monthlyCount: monthlyCount,
-                        streakDays: streakDays,
-                      ),
-                      const SizedBox(height: 24),
-                      _PrayerTimelineSection(
-                        now: _now,
-                        prayers: prayers,
-                        sunrise: sunrise,
-                        trackerState: trackerState,
-                        notifyState: settings.perPrayerNotifications,
-                        onToggleDone: (name) => ref
-                            .read(prayerTrackerProvider.notifier)
-                            .toggle(name),
-                        onToggleNotify: (name, value) => ref
-                            .read(settingsControllerProvider.notifier)
-                            .setPrayerNotificationEnabled(name, value),
-                      ),
-                      const SizedBox(height: 20),
-                      _MissedPrayerSection(missedCount: missedCount),
-                      const SizedBox(height: 32),
-                    ],
+      body: AtmosphericBackground(
+        child: Stack(
+          children: [
+            Positioned.fill(
+              child: SingleChildScrollView(
+                padding: EdgeInsets.fromLTRB(
+                  AppResponsive.horizontalMargin(context),
+                  92,
+                  AppResponsive.horizontalMargin(context),
+                  AppResponsive.bottomScrollPad(context),
+                ),
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 1200),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Entrance3D(
+                          delay: const Duration(milliseconds: 50),
+                          child: _DateSummarySection(
+                            isWide: isWide,
+                            now: _now,
+                            dayData: dayData,
+                            monthlyCount: monthlyCount,
+                            streakDays: streakDays,
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        Entrance3D(
+                          delay: const Duration(milliseconds: 150),
+                          child: _PrayerTimelineSection(
+                            now: _now,
+                            prayers: prayers,
+                            sunrise: sunrise,
+                            trackerState: trackerState,
+                            notifyState: settings.perPrayerNotifications,
+                            onToggleDone: (name) => ref
+                                .read(prayerTrackerProvider.notifier)
+                                .toggle(name),
+                            onToggleNotify: (name, value) => ref
+                                .read(settingsControllerProvider.notifier)
+                                .setPrayerNotificationEnabled(name, value),
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        Entrance3D(
+                          delay: const Duration(milliseconds: 250),
+                          child: _MissedPrayerSection(missedCount: missedCount),
+                        ),
+                        const SizedBox(height: 32),
+                      ],
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
 
-          const Positioned(top: 0, left: 0, right: 0, child: _TopAppBar()),
+            const Positioned(top: 0, left: 0, right: 0, child: _TopAppBar()),
 
-          if (!isWide)
-            const Positioned(
-              bottom: 0,
-              left: 0,
-              right: 0,
-              child: SharedBottomNavBar(active: NavTab.prayer),
-            ),
-        ],
+            if (!isWide)
+              const Positioned(
+                bottom: 0,
+                left: 0,
+                right: 0,
+                child: SharedBottomNavBar(active: NavTab.prayer),
+              ),
+          ],
+        ),
       ),
     );
   }
@@ -599,7 +598,7 @@ class _LocationCardContent extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            'Sunset: $sunsetLabel • Tap to select from 64 BD Districts',
+            'Sunset: $sunsetLabel • ${settings?['madhhab'] ?? 'Hanafi'} • ${_methodName((settings?['prayerMethod'] as int?) ?? 1)}',
             style: GoogleFonts.plusJakartaSans(
               fontSize: 12,
               color: AppColors.onSurfaceVariant,
@@ -610,6 +609,29 @@ class _LocationCardContent extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  static String _methodName(int id) {
+    switch (id) {
+      case 1:
+        return 'Karachi';
+      case 2:
+        return 'ISNA';
+      case 3:
+        return 'MWL';
+      case 4:
+        return 'Umm Al-Qura';
+      case 5:
+        return 'Egyptian';
+      case 11:
+        return 'Singapore';
+      case 13:
+        return 'Diyanet';
+      case 15:
+        return 'Moonsighting';
+      default:
+        return 'Karachi';
+    }
   }
 }
 
@@ -727,6 +749,24 @@ class _PrayerTimelineSection extends StatelessWidget {
   }
 }
 
+String _prayerEndLabel(String prayerName, DateTime endTime) {
+  final formatted = DateFormat('h:mm a').format(endTime);
+  switch (prayerName) {
+    case 'Fajr':
+      return 'Ends at Sunrise • $formatted';
+    case 'Dhuhr':
+      return 'Ends at Asr • $formatted';
+    case 'Asr':
+      return 'Ends at Sunset • $formatted';
+    case 'Maghrib':
+      return 'Ends at Isha • $formatted';
+    case 'Isha':
+      return 'Ends at Fajr dawn • $formatted';
+    default:
+      return 'Ends at $formatted';
+  }
+}
+
 class _CompletedPrayerRow extends StatelessWidget {
   final PrayerTimeEntry entry;
   final DateTime endTime;
@@ -742,9 +782,6 @@ class _CompletedPrayerRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final rangeText =
-        '${DateFormat('h:mm a').format(entry.time)} – ${DateFormat('h:mm a').format(endTime)}';
-
     return ScaleButton(
       onTap: onToggleDone,
       child: Container(
@@ -793,7 +830,7 @@ class _CompletedPrayerRow extends StatelessWidget {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    rangeText,
+                    _prayerEndLabel(entry.name, endTime),
                     style: GoogleFonts.plusJakartaSans(
                       fontSize: 12,
                       color: AppColors.onSurfaceVariant.withOpacity(0.6),
@@ -805,6 +842,17 @@ class _CompletedPrayerRow extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 8),
+            Text(
+              DateFormat('h:mm a').format(entry.time),
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 15,
+                fontWeight: FontWeight.w800,
+                color: done
+                    ? AppColors.onSurfaceVariant.withOpacity(0.5)
+                    : AppColors.onBackground,
+              ),
+            ),
+            const SizedBox(width: 10),
             AnimatedContainer(
               duration: const Duration(milliseconds: 200),
               width: 28,
@@ -921,8 +969,6 @@ class _CurrentPrayerRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final remaining =
         endTime.isAfter(now) ? endTime.difference(now) : Duration.zero;
-    final rangeText =
-        '${DateFormat('h:mm a').format(entry.time)} – ${DateFormat('h:mm a').format(endTime)}';
 
     return Card3D(
       borderRadius: 22,
@@ -979,32 +1025,14 @@ class _CurrentPrayerRow extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 3,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.primary,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Text(
-                        'NOW',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 10,
-                          letterSpacing: 0.8,
-                          fontWeight: FontWeight.w900,
-                          color: AppColors.onPrimary,
-                        ),
-                      ),
-                    ),
+                    const HoloBadge(label: 'NOW'),
                   ],
                 ),
                 const SizedBox(height: 3),
                 Text(
-                  rangeText,
+                  _prayerEndLabel(entry.name, endTime),
                   style: GoogleFonts.plusJakartaSans(
-                    fontSize: 13,
+                    fontSize: 12,
                     fontWeight: FontWeight.w600,
                     color: AppColors.primary,
                   ),
@@ -1013,7 +1041,7 @@ class _CurrentPrayerRow extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  'Ends in ${remaining.inHours > 0 ? '${remaining.inHours}h ' : ''}${remaining.inMinutes.remainder(60)}m',
+                  'Ends in ${remaining.inHours > 0 ? '${remaining.inHours}h ' : ''}${remaining.inMinutes.remainder(60)}m ${remaining.inSeconds.remainder(60)}s',
                   style: GoogleFonts.plusJakartaSans(
                     fontSize: 11,
                     fontWeight: FontWeight.w500,
@@ -1023,6 +1051,15 @@ class _CurrentPrayerRow extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
               ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            DateFormat('h:mm a').format(entry.time),
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 17,
+              fontWeight: FontWeight.w900,
+              color: AppColors.primary,
             ),
           ),
           const SizedBox(width: 8),
@@ -1071,8 +1108,6 @@ class _UpcomingPrayerRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final rangeText =
-        '${DateFormat('h:mm a').format(entry.time)} – ${DateFormat('h:mm a').format(endTime)}';
     final remaining =
         entry.time.isAfter(now) ? entry.time.difference(now) : Duration.zero;
 
@@ -1161,7 +1196,7 @@ class _UpcomingPrayerRow extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  rangeText,
+                  _prayerEndLabel(entry.name, endTime),
                   style: GoogleFonts.plusJakartaSans(
                     fontSize: 12,
                     color: AppColors.onSurfaceVariant,
@@ -1172,7 +1207,7 @@ class _UpcomingPrayerRow extends StatelessWidget {
                 if (isNext) ...[
                   const SizedBox(height: 2),
                   Text(
-                    'Starts in ${remaining.inHours > 0 ? '${remaining.inHours}h ' : ''}${remaining.inMinutes.remainder(60)}m',
+                    'Starts in ${remaining.inHours > 0 ? '${remaining.inHours}h ' : ''}${remaining.inMinutes.remainder(60)}m ${remaining.inSeconds.remainder(60)}s',
                     style: GoogleFonts.plusJakartaSans(
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
@@ -1183,6 +1218,15 @@ class _UpcomingPrayerRow extends StatelessWidget {
                   ),
                 ],
               ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            DateFormat('h:mm a').format(entry.time),
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 15,
+              fontWeight: FontWeight.w800,
+              color: isNext ? AppColors.secondary : AppColors.onBackground,
             ),
           ),
           const SizedBox(width: 8),

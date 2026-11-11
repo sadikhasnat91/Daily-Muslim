@@ -1,4 +1,4 @@
-// prayer_tracker_screen.dart
+﻿// prayer_tracker_screen.dart
 //
 // Muslim Daily – World-Class 3D Animated Prayer & Qada Habit Tracker.
 // Interactive completion ring, 3D prayer status cards, streak statistics, and tactile toggles.
@@ -71,29 +71,18 @@ class PrayerTrackerScreen extends ConsumerWidget {
           ),
         ),
       ),
-      body: Stack(
-        children: [
-          // Background Glows
-          Positioned(
-            top: 20,
-            right: -60,
-            child: GlowOrb(color: AppColors.primary, radius: 240, opacity: 0.14),
-          ),
-          Positioned(
-            bottom: 40,
-            left: -80,
-            child: GlowOrb(color: AppColors.gold, radius: 220, opacity: 0.08),
-          ),
-
-          SafeArea(
-            child: Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 680),
-                child: ListView(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                  children: [
-                    // 3D Progress Hero Card
-                    Card3D(
+      body: AtmosphericBackground(
+        child: SafeArea(
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 680),
+              child: ListView(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                children: [
+                  // 3D Progress Hero Card
+                  Entrance3D(
+                    delay: const Duration(milliseconds: 50),
+                    child: Card3D(
                       borderRadius: 26,
                       padding: const EdgeInsets.all(24),
                       gradient: const LinearGradient(
@@ -174,8 +163,9 @@ class PrayerTrackerScreen extends ConsumerWidget {
                         ],
                       ),
                     ),
+                  ),
 
-                    const SizedBox(height: 24),
+                  const SizedBox(height: 24),
                     Text(
                       'DAILY PRAYERS',
                       style: GoogleFonts.plusJakartaSans(
@@ -334,12 +324,11 @@ class PrayerTrackerScreen extends ConsumerWidget {
                         );
                       }(),
                     ],
-                  ],
-                ),
+                ],
               ),
             ),
           ),
-        ],
+        ),
       ),
     );
   }
@@ -352,26 +341,27 @@ class _PrayerCompletionRingPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
-    final radius = size.width / 2 - 4;
+    final radius = size.width / 2 - 5;
 
+    // Track
     final trackPaint = Paint()
       ..color = Colors.white.withOpacity(0.08)
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 8;
+      ..strokeWidth = 7.5;
     canvas.drawCircle(center, radius, trackPaint);
 
     if (progress > 0) {
       final progressPaint = Paint()
         ..shader = SweepGradient(
           colors: [
-            AppColors.primary.withOpacity(0.3),
+            AppColors.primary.withOpacity(0.2),
             AppColors.primary,
           ],
           stops: const [0.0, 1.0],
           transform: const GradientRotation(-math.pi / 2),
         ).createShader(Rect.fromCircle(center: center, radius: radius))
         ..style = PaintingStyle.stroke
-        ..strokeWidth = 8
+        ..strokeWidth = 7.5
         ..strokeCap = StrokeCap.round;
 
       const startAngle = -math.pi / 2;
@@ -383,6 +373,21 @@ class _PrayerCompletionRingPainter extends CustomPainter {
         false,
         progressPaint,
       );
+
+      // Neon glowing tip bead
+      final tipAngle = startAngle + sweepAngle;
+      final tipPos = Offset(
+        center.dx + radius * math.cos(tipAngle),
+        center.dy + radius * math.sin(tipAngle),
+      );
+
+      final glowPaint = Paint()
+        ..color = AppColors.primary.withOpacity(0.7)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6);
+      canvas.drawCircle(tipPos, 6.5, glowPaint);
+
+      final corePaint = Paint()..color = Colors.white;
+      canvas.drawCircle(tipPos, 3.2, corePaint);
     }
   }
 
